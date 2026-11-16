@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAN Bus Lab — Interactive Controller Area Network</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#060a14; --glass:rgba(255,255,255,.055); --glass2:rgba(255,255,255,.09);
+  --line:rgba(255,255,255,.12); --txt:#e8eefc; --mut:#93a0bd; --cy:#5ee7ff; --pk:#ff6bd0;
+  --vi:#9b8cff; --gr:#6dffb1; --am:#ffc861; --rd:#ff6b7d; --r:18px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.6 Inter,system-ui,sans-serif;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:-20%;z-index:-1;
+  background:radial-gradient(40% 35% at 15% 10%,rgba(94,231,255,.18),transparent 70%),
+  radial-gradient(35% 35% at 85% 20%,rgba(155,140,255,.20),transparent 70%),
+  radial-gradient(45% 40% at 60% 95%,rgba(255,107,208,.13),transparent 70%);filter:blur(10px)}
+a{color:var(--cy)}
+code,.mono{font-family:"JetBrains Mono",monospace}
+nav{position:sticky;top:12px;z-index:50;margin:12px auto 0;max-width:1200px;display:flex;gap:6px;align-items:center;
+  padding:8px 10px;border-radius:999px;background:rgba(10,16,30,.55);border:1px solid var(--line);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);overflow-x:auto}
+nav .brand{font-weight:700;padding:0 12px 0 8px;white-space:nowrap}
+nav .brand span{color:var(--cy)}
+nav a{color:var(--mut);text-decoration:none;padding:6px 12px;border-radius:999px;font-size:13px;white-space:nowrap}
+nav a:hover,nav a.on{color:var(--txt);background:var(--glass2)}
+main{max-width:1200px;margin:0 auto;padding:0 20px 80px}
+section{padding:72px 0 8px;scroll-margin-top:60px}
+h1{font-size:clamp(34px,5vw,60px);line-height:1.05;margin:0 0 14px;letter-spacing:-.02em}
+h2{font-size:clamp(26px,3vw,36px);margin:0 0 6px;letter-spacing:-.01em}
+h3{margin:0 0 8px;font-size:17px}
+.kicker{color:var(--cy);font:600 12px/1 "JetBrains Mono";letter-spacing:.14em;text-transform:uppercase;margin-bottom:10px}
+.lead{color:var(--mut);max-width:780px;font-size:16px}
+.glass{background:var(--glass);border:1px solid var(--line);border-radius:var(--r);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  box-shadow:0 10px 40px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08);padding:20px}
+.grid{display:grid;gap:18px}
+.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g32{grid-template-columns:1.6fr 1fr}
+@media(max-width:860px){.g2,.g3,.g32{grid-template-columns:1fr}}
+.hero{display:grid;grid-template-columns:1fr 1.25fr;gap:24px;align-items:center;padding-top:40px}
+@media(max-width:960px){.hero{grid-template-columns:1fr}}
+#stage{height:520px;padding:0;overflow:hidden;position:relative}
+#stage canvas{display:block;width:100%;height:100%;cursor:grab}
+.hud{position:absolute;left:14px;right:14px;bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.hud .log{flex:1;min-width:200px;font:12px/1.4 "JetBrains Mono";color:var(--mut);background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:12px;padding:8px 10px;max-height:64px;overflow:auto}
+.btn{appearance:none;border:1px solid var(--line);background:var(--glass2);color:var(--txt);padding:8px 14px;border-radius:12px;font:500 13px Inter;cursor:pointer;transition:.15s}
+.btn:hover{border-color:rgba(94,231,255,.6);box-shadow:0 0 0 3px rgba(94,231,255,.12)}
+.btn.pri{background:linear-gradient(135deg,rgba(94,231,255,.35),rgba(155,140,255,.35));border-color:rgba(94,231,255,.5)}
+.btn.sm{padding:5px 10px;font-size:12px}
+input,select{background:rgba(0,0,0,.3);border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:7px 10px;font:13px "JetBrains Mono"}
+input[type=range]{padding:0;accent-color:var(--cy)}
+input[type=checkbox]{accent-color:var(--cy)}
+label{font-size:13px;color:var(--mut)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.pill{display:inline-block;padding:2px 10px;border-radius:999px;font:600 11px "JetBrains Mono";border:1px solid var(--line)}
+.stat{font:600 22px "JetBrains Mono"}
+.stat small{display:block;font:500 11px Inter;color:var(--mut);letter-spacing:.06em;text-transform:uppercase}
+.src{font-size:12px;color:var(--mut);margin-top:10px}
+.src a{color:var(--mut)}
+canvas.scope{width:100%;height:260px;display:block;border-radius:12px;background:rgba(0,0,0,.35);border:1px solid var(--line)}
+.bits{display:flex;flex-wrap:wrap;gap:2px;font:600 11px "JetBrains Mono"}
+.bit{width:20px;height:28px;display:grid;place-items:center;border-radius:5px;position:relative;cursor:default}
+.bit.s{outline:2px dashed #fff;outline-offset:-2px}
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.legend span{display:inline-flex;gap:6px;align-items:center;font-size:12px;color:var(--mut)}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}
+th{color:var(--mut);font-weight:500;font-size:12px}
+.arb td{text-align:center;font:600 12px "JetBrains Mono";padding:6px 2px}
+.arb td.d{background:rgba(94,231,255,.25)}.arb td.r{background:rgba(255,255,255,.05)}
+.arb td.x{opacity:.25}.arb tr.bus td{border-top:2px solid var(--cy)}
+.state{font:700 20px "JetBrains Mono";padding:6px 16px;border-radius:12px;display:inline-block}
+.gauge{height:14px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;position:relative}
+.gauge b{display:block;height:100%;border-radius:99px;transition:width .3s}
+.gauge .mk{position:absolute;top:-3px;bottom:-3px;width:2px;background:#fff8}
+.tbar{display:flex;height:44px;border-radius:10px;overflow:hidden;font:600 11px "JetBrains Mono";margin:12px 0}
+.tbar div{display:grid;place-items:center;border-right:1px solid #0006;min-width:0;overflow:hidden;white-space:nowrap}
+.ok{color:var(--gr)}.bad{color:var(--rd)}
+.eq{font:13px/1.9 "JetBrains Mono";background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:12px;padding:12px 14px;overflow-x:auto}
+.rtab input{width:64px;padding:4px 6px}.rtab input.nm{width:52px}
+.rbar{height:10px;border-radius:99px;background:rgba(255,255,255,.08);position:relative;min-width:120px}
+.rbar b{position:absolute;left:0;top:0;bottom:0;border-radius:99px}
+.rbar i{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--am)}
+.cmp td:first-child{color:var(--mut)}
+.refs li{margin-bottom:8px;color:var(--mut)} .refs li b{color:var(--txt);font-weight:500}
+.tip{position:fixed;pointer-events:none;z-index:99;background:rgba(10,16,30,.92);border:1px solid var(--line);padding:6px 10px;border-radius:8px;font:12px "JetBrains Mono";display:none}
+footer{color:var(--mut);font-size:12px;text-align:center;padding:30px}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+</head>
+<body>
+<nav>
+  <div class="brand">CAN<span>·</span>Lab</div>
+  <a href="#intro">3D Bus</a><a href="#physical">Physical</a><a href="#frame">Frame</a><a href="#arbitration">Arbitration</a>
+  <a href="#errors">Errors</a><a href="#timing">Bit timing</a><a href="#realtime">Real-time</a><a href="#evolution">FD &amp; XL</a><a href="#references">References</a>
+</nav>
+<main>
+
+<!-- ============ HERO / 3D ============ -->
+<section id="intro" class="hero">
+  <div>
+    <div class="kicker">Real-time embedded systems</div>
+    <h1>Controller Area Network, one bit at a time.</h1>
+    <p class="lead">CAN is a multi-master serial bus. There are no node addresses: every frame carries an identifier that names its content and sets its priority. Bosch started developing it in 1983, presented it at the SAE Congress in 1986, and it went into series production in the 1991 Mercedes S-Class. ISO first standardised it in 1993 as ISO 11898.</p>
+    <p class="lead">The 3D model is interactive. <b>Click an ECU</b> to transmit its frame along the twisted pair. Press <b>Simultaneous start</b> to see bitwise arbitration: the lowest identifier wins and no bus time is lost.</p>
+    <div class="row" style="margin-top:14px">
+      <a class="btn pri" href="#frame" style="text-decoration:none">Build a frame →</a>
+      <a class="btn" href="#arbitration" style="text-decoration:none">Arbitration lab</a>
+    </div>
+    <p class="src">History: Davis, Burns, Bril &amp; Lukkien, <i>Real-Time Systems</i> 35(3), 2007, §1.1.</p>
+  </div>
+  <div class="glass" id="stage">
+    <div class="hud">
+      <button class="btn pri sm" id="race">⚡ Simultaneous start</button>
+      <button class="btn sm" id="spin">⟳ Auto-rotate</button>
+      <div class="log" id="log3d">Click any ECU to transmit · drag to orbit · scroll to zoom</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PHYSICAL ============ -->
+<section id="physical">
+  <div class="kicker">01 · Physical layer (ISO 11898-2)</div>
+  <h2>Dominant beats recessive</h2>
+  <p class="lead">High-speed CAN uses a differential pair. In the <b>recessive</b> state (logic 1) nobody drives the bus and both lines rest near 2.5 V. In the <b>dominant</b> state (logic 0) CAN_H rises to about 3.5 V and CAN_L falls to about 1.5 V. Receivers read only the difference: below 0.5 V is recessive and above 0.9 V is dominant. The bus behaves as a <b>wired-AND</b>: one dominant transmitter overrides any number of recessive ones. A 120 Ω resistor terminates each end of the line.</p>
+  <div class="grid g32" style="margin-top:20px">
+    <div class="glass">
+      <canvas class="scope" id="scope"></canvas>
+      <div class="row" style="margin-top:12px" id="bitToggles"></div>
+    </div>
+    <div class="glass">
+      <h3>Try it</h3>
+      <p style="color:var(--mut);font-size:14px;margin-top:0">Click the bit buttons to change the pattern, then add common-mode noise. The noise moves CAN_H and CAN_L together, so V<sub>diff</sub> stays clean. This is why CAN uses a twisted pair.</p>
+      <label>Common-mode noise: <span id="nzv" class="mono">0.0 V</span></label>
+      <input type="range" id="noise" min="0" max="2" step="0.1" value="0" style="width:100%">
+      <label style="display:block;margin-top:10px"><input type="checkbox" id="showDiff" checked> Show V<sub>diff</sub> = CAN_H − CAN_L and thresholds</label>
+      <div class="legend"><span><i style="background:var(--cy)"></i>CAN_H</span><span><i style="background:var(--pk)"></i>CAN_L</span><span><i style="background:var(--gr)"></i>V<sub>diff</sub></span><span><i style="background:var(--am)"></i>0.5 / 0.9 V thresholds</span></div>
+      <p class="src">Levels: CiA “CAN HS transmission” (dominant V<sub>diff</sub> 0.9–2.0 V, recessive −1.0–0.5 V); ISO 11898-2. Wired-AND: Bosch CAN 2.0 Part B, “Bus values”.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FRAME ============ -->
+<section id="frame">
+  <div class="kicker">02 · Data link layer: the frame</div>
+  <h2>Frame builder, with live CRC and bit stuffing</h2>
+  <p class="lead">Enter an identifier and payload. The builder assembles the bit sequence as in Bosch CAN 2.0 Part B: it computes the 15-bit CRC (polynomial x¹⁵+x¹⁴+x¹⁰+x⁸+x⁷+x⁴+x³+1) and inserts a complementary <b>stuff bit</b> after every five identical bits, from SOF through the CRC sequence. Stuff bits have a dashed outline. Hover over any bit to see its field.</p>
+  <div class="glass" style="margin-top:20px">
+    <div class="row">
+      <label>ID (hex) <input id="fid" value="123" size="9"></label>
+      <label><input type="checkbox" id="fext"> Extended (29-bit)</label>
+      <label><input type="checkbox" id="frtr"> Remote frame</label>
+      <label>Data bytes (hex) <input id="fdata" value="DE AD BE EF 00 00 00 00" size="28"></label>
+      <label>Bit rate <select id="fbr"><option value="125000">125 kbit/s</option><option value="250000">250 kbit/s</option><option value="500000" selected>500 kbit/s</option><option value="1000000">1 Mbit/s</option></select></label>
+      <button class="btn sm" id="fzero">All-zero payload (worst case)</button>
+    </div>
+    <div class="legend" id="flegend"></div>
+    <div class="bits" id="fbits"></div>
+    <div class="grid g3" style="margin-top:16px;grid-template-columns:repeat(auto-fit,minmax(140px,1fr))" id="fstats"></div>
+    <p class="src">Frame format, CRC algorithm and stuffing rule: Bosch CAN 2.0 Part B, chapters “Message Transfer” and “Bit Stream Coding”. The ACK slot is shown dominant, as overwritten by a receiver. The CRC was tested against the CRC-15/CAN check value 0x059E for the input “123456789”.</p>
+  </div>
+</section>
+
+<!-- ============ ARBITRATION ============ -->
+<section id="arbitration">
+  <div class="kicker">03 · Medium access: CSMA with bitwise arbitration</div>
+  <h2>Arbitration lab</h2>
+  <p class="lead">Nodes that start together send their identifiers MSB first while reading the bus back. A node that sends recessive (1) and reads dominant (0) has lost arbitration. It stops transmitting at once and becomes a receiver. The frame with the lowest identifier gets through intact. With equal identifiers, a data frame (RTR dominant) beats a remote frame.</p>
+  <div class="grid g32" style="margin-top:20px">
+    <div class="glass" style="overflow-x:auto"><table class="arb" id="arbT"></table></div>
+    <div class="glass">
+      <h3>Contending nodes (11-bit IDs)</h3>
+      <div id="arbIn"></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn pri sm" id="arbStep">Step bit ▶</button>
+        <button class="btn sm" id="arbRun">Run all</button>
+        <button class="btn sm" id="arbReset">Reset</button>
+      </div>
+      <p id="arbMsg" style="font-size:14px;margin-bottom:0"></p>
+      <p class="src">Bosch CAN 2.0 Part B, “Message Transfer” and “Basic Concepts: Arbitration”. Two nodes must never send data frames with the same identifier.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ERRORS ============ -->
+<section id="errors">
+  <div class="kicker">04 · Error detection &amp; fault confinement</div>
+  <h2>Error counters and the fault-confinement state machine</h2>
+  <p class="lead">CAN detects five error types: bit, stuff, CRC, form and acknowledgement errors. Every node keeps a transmit error counter (TEC) and a receive error counter (REC). A node with a persistent fault therefore removes itself from the bus before it can block everyone else. The Bosch specification gives a residual probability of an undetected corrupted message below <i>message error rate × 4.7·10⁻¹¹</i>.</p>
+  <div class="grid g2" style="margin-top:20px">
+    <div class="glass">
+      <div class="row" style="justify-content:space-between"><h3>Node state</h3><span class="state" id="est"></span></div>
+      <label>TEC <span class="mono" id="tecv"></span></label>
+      <div class="gauge"><b id="tecb"></b><span class="mk" style="left:50%"></span></div>
+      <label style="display:block;margin-top:10px">REC <span class="mono" id="recv"></span></label>
+      <div class="gauge"><b id="recb"></b><span class="mk" style="left:50%"></span></div>
+      <p style="font-size:12px;color:var(--mut)">Scale 0–256. The marker shows the error-passive threshold (128).</p>
+      <div class="row">
+        <button class="btn sm" data-e="txerr">Transmit error (TEC +8)</button>
+        <button class="btn sm" data-e="txok">Successful TX (TEC −1)</button>
+        <button class="btn sm" data-e="rxerr">Receive error (REC +1)</button>
+        <button class="btn sm" data-e="rxdom">Dominant after own error flag (REC +8)</button>
+        <button class="btn sm" data-e="rxok">Successful RX (REC −1)</button>
+        <button class="btn sm" data-e="burst">Faulty transceiver: 10 TX errors</button>
+        <button class="btn pri sm" data-e="recover">Bus-off recovery (128 × 11 recessive bits)</button>
+        <button class="btn sm" data-e="reset">Reset</button>
+      </div>
+      <div class="log mono" id="elog" style="margin-top:12px;font-size:12px;color:var(--mut);max-height:90px;overflow:auto"></div>
+    </div>
+    <div class="glass">
+      <h3>Rules (Bosch CAN 2.0 Part B, Fault Confinement)</h3>
+      <table>
+        <tr><th>State</th><th>Condition</th><th>Behaviour</th></tr>
+        <tr><td><span class="pill ok">Error-active</span></td><td>TEC ≤ 127 and REC ≤ 127</td><td>Signals errors with an <b>active error flag</b>: 6 dominant bits</td></tr>
+        <tr><td><span class="pill" style="color:var(--am)">Error-passive</span></td><td>TEC ≥ 128 or REC ≥ 128</td><td>Signals with a <b>passive error flag</b>: 6 recessive bits. Waits an extra 8-bit “suspend transmission” time after transmitting</td></tr>
+        <tr><td><span class="pill bad">Bus-off</span></td><td>TEC ≥ 256</td><td>Takes no part in bus activity. Recovers after 128 occurrences of 11 consecutive recessive bits, with both counters reset to 0</td></tr>
+      </table>
+      <p style="font-size:13px;color:var(--mut)">Error flags are followed by an <b>error delimiter</b> of 8 recessive bits. A successful reception decrements REC when it is 1–127. When REC is above 127, a successful reception sets it to a value between 119 and 127; this model uses 127. Only TEC can drive a node to bus-off.</p>
+      <p class="src">Bosch CAN 2.0 Part B, chapters “Error Handling” and “Fault Confinement”.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TIMING ============ -->
+<section id="timing">
+  <div class="kicker">05 · Bit timing &amp; synchronisation</div>
+  <h2>Bit-timing calculator</h2>
+  <p class="lead">Each bit time is split into time quanta (TQ): <b>SYNC_SEG</b> (1 TQ, where an edge is expected), <b>PROP_SEG</b> (compensates the physical delay), <b>PHASE_SEG1</b> and <b>PHASE_SEG2</b>. The bit is sampled at the end of PHASE_SEG1. Nodes resynchronise on recessive-to-dominant edges by stretching PHASE_SEG1 or shortening PHASE_SEG2 by up to SJW. Because arbitration needs every node to see the same bit in the same bit time, the bit time must cover the round-trip propagation delay. Longer buses therefore need lower bit rates.</p>
+  <div class="grid g2" style="margin-top:20px">
+    <div class="glass">
+      <div class="row">
+        <label>Clock f<sub>CAN</sub> (MHz) <input id="tclk" value="80" size="5"></label>
+        <label>Bit rate <select id="tbr"><option>125000</option><option>250000</option><option selected>500000</option><option>1000000</option></select></label>
+      </div>
+      <label style="display:block;margin-top:12px">TQ per bit: <span class="mono" id="tntqv"></span></label>
+      <input type="range" id="tntq" min="8" max="25" value="16" style="width:100%">
+      <label style="display:block">Target sample point: <span class="mono" id="tspv"></span></label>
+      <input type="range" id="tsp" min="50" max="90" value="88" style="width:100%">
+      <label>SJW (TQ) <input id="tsjw" value="1" size="3"></label>
+      <div class="tbar" id="tbar"></div>
+      <div id="tout" style="font-size:14px"></div>
+    </div>
+    <div class="glass">
+      <h3>Constraints checked</h3>
+      <ul style="color:var(--mut);font-size:14px;padding-left:18px">
+        <li>The bit time is programmable from at least 8 to 25 TQ (Bosch CAN 2.0).</li>
+        <li>The prescaler is an integer from at least 1 to 32: f<sub>CAN</sub> / (bit rate × N<sub>TQ</sub>) must be a whole number.</li>
+        <li>SYNC_SEG = 1 TQ. The information processing time (IPT) is ≤ 2 TQ.</li>
+        <li><b>Bosch CAN 2.0 (1991)</b> fixes PHASE_SEG2 = max(PHASE_SEG1, IPT), with PROP_SEG and PHASE_SEG1 each 1–8 TQ. <b>ISO 11898-1</b> lets PHASE_SEG2 be set on its own, with a minimum configuration range of 2–8 TQ. That allows the late sample points (around 87.5 %) that CANopen practice recommends.</li>
+        <li>SJW is 1–4 TQ and no longer than either phase segment.</li>
+        <li>Only one synchronisation is allowed per bit time, and only on recessive→dominant edges.</li>
+      </ul>
+      <p style="font-size:13px;color:var(--mut)">Most modern controllers combine PROP_SEG and PHASE_SEG1 into one register field (TSEG1), which is what this calculator outputs. Their limits differ by vendor, so check your reference manual.</p>
+      <p class="src">Bosch CAN 2.0 Part B, “Bit Timing Requirements”, which also gives a maximum oscillator tolerance of 1.58 %. ISO 11898-1 Phase_Seg2 range per Microchip MCAN errata and Bosch’s ISO-conformant bit-timing table. The 87.5 % recommendation is from CANopen practice (CANpie bit-timing table).</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ REALTIME ============ -->
+<section id="realtime">
+  <div class="kicker">06 · Real-time guarantees</div>
+  <h2>Worst-case response-time analysis</h2>
+  <p class="lead">Once a frame starts, it cannot be pre-empted, and arbitration always picks the highest-priority pending frame. CAN therefore behaves like <b>fixed-priority non-preemptive scheduling</b>. Tindell, Burns and Wellings (1994) derived its schedulability analysis. In 2007 Davis, Burns, Bril and Lukkien showed that the original analysis is <b>optimistic</b>: it can guarantee messages that actually miss their deadlines. They published the revised analysis implemented below. Load their counterexample and switch between the two analyses.</p>
+  <div class="eq" style="margin-top:16px">
+    C<sub>m</sub> = (g + 8s<sub>m</sub> + 13 + ⌊(g + 8s<sub>m</sub> − 1)/4⌋)·τ<sub>bit</sub>   g = 34 (11-bit ID), 54 (29-bit ID)  → 135 bits for 8 bytes, 11-bit ID<br>
+    B<sub>m</sub> = max<sub>k∈lp(m)</sub> C<sub>k</sub><br>
+    t<sub>m</sub> = B<sub>m</sub> + Σ<sub>k∈hep(m)</sub> ⌈(t<sub>m</sub> + J<sub>k</sub>)/T<sub>k</sub>⌉·C<sub>k</sub>    Q<sub>m</sub> = ⌈(t<sub>m</sub> + J<sub>m</sub>)/T<sub>m</sub>⌉<br>
+    w<sub>m</sub>(q) = B<sub>m</sub> + q·C<sub>m</sub> + Σ<sub>k∈hp(m)</sub> ⌈(w<sub>m</sub>(q) + J<sub>k</sub> + τ<sub>bit</sub>)/T<sub>k</sub>⌉·C<sub>k</sub><br>
+    R<sub>m</sub> = max<sub>q=0..Q<sub>m</sub>−1</sub> ( J<sub>m</sub> + w<sub>m</sub>(q) − q·T<sub>m</sub> + C<sub>m</sub> )
+  </div>
+  <div class="glass" style="margin-top:18px">
+    <div class="row" style="justify-content:space-between">
+      <div class="row">
+        <label>Bit rate <select id="rbr"><option value="125000">125 kbit/s</option><option value="250000">250 kbit/s</option><option value="500000" selected>500 kbit/s</option><option value="1000000">1 Mbit/s</option></select></label>
+        <label>Analysis <select id="rmode"><option value="revised">Revised (Davis et al. 2007)</option><option value="original">Original 1994: single instance (flawed)</option></select></label>
+      </div>
+      <div class="row">
+        <button class="btn pri sm" id="rdavis">Load Davis 2007 counterexample</button>
+        <button class="btn sm" id="rsample">Load sample set</button>
+        <button class="btn sm" id="radd">+ Message</button>
+      </div>
+    </div>
+    <div style="overflow-x:auto;margin-top:12px"><table class="rtab" id="rtab"></table></div>
+    <div id="rsum" style="margin-top:10px;font-size:14px"></div>
+    <p class="src">Equations 1, 5, 8, 10, 11 and 13 of Davis et al., <i>Real-Time Systems</i> 35(3):239–272, 2007 (doi:10.1007/s11241-007-9012-7). Times in ms. Priority 1 is highest; lower ID means higher priority. The counterexample uses 125 kbit/s and 7-byte frames, so C = 1 ms exactly. Message C is reported as 3 ms by the original analysis but its true worst case is 3.5 ms, beyond its 3.25 ms deadline. The sample set is illustrative only.</p>
+  </div>
+</section>
+
+<!-- ============ EVOLUTION ============ -->
+<section id="evolution">
+  <div class="kicker">07 · Three generations</div>
+  <h2>Classical CAN → CAN FD → CAN XL</h2>
+  <p class="lead">CAN FD (Hartwich, Bosch, iCC 2012) keeps arbitration at the nominal rate. Once arbitration is over, the <b>BRS</b> bit can switch to a faster data-phase bit rate, and the data field grows to 64 bytes. CAN XL, the third generation, separates priority from addressing and carries up to 2048 bytes. All three are now in ISO 11898-1:2024.</p>
+  <div class="grid g32" style="margin-top:20px">
+    <div class="glass" style="overflow-x:auto">
+      <table class="cmp">
+        <tr><th></th><th>Classical CAN (CC)</th><th>CAN FD</th><th>CAN XL</th></tr>
+        <tr><td>Introduced</td><td>Bosch spec 2.0, 1991; ISO 11898 1993</td><td>Bosch 2012; ISO 11898-1:2015</td><td>CiA 610-1; ISO 11898-1:2024</td></tr>
+        <tr><td>Data field</td><td>0–8 bytes</td><td>0–64 bytes</td><td>1–2048 bytes</td></tr>
+        <tr><td>Bit rate</td><td>≤ 1 Mbit/s</td><td>Arbitration ≤ 1 Mbit/s; data phase typically up to 8 Mbit/s</td><td>Data phase up to 20 Mbit/s (CAN SIC XL transceiver)</td></tr>
+        <tr><td>CRC</td><td>15 bit</td><td>17 bit (≤ 16 bytes), 21 bit (> 16 bytes), plus stuff-bit count</td><td>Two CRCs (header and frame)</td></tr>
+        <tr><td>New control bits</td><td>—</td><td>FDF, BRS, ESI</td><td>11-bit priority ID + 32-bit acceptance field</td></tr>
+      </table>
+      <p class="src">Hartwich, “CAN with Flexible Data-Rate”, iCC 2012; ISO 11898-1:2015; CiA, “CAN XL” knowledge page and CiA 610-1; CiA brochure “CAN 1986 to 2021”.</p>
+    </div>
+    <div class="glass">
+      <h3>CAN FD DLC decoder</h3>
+      <label>DLC (0–15): <span class="mono" id="dlcv">15</span></label>
+      <input type="range" id="dlc" min="0" max="15" value="15" style="width:100%">
+      <div class="row" style="margin-top:10px">
+        <div class="stat" id="dlcCC"></div><div class="stat" id="dlcFD"></div><div class="stat" id="dlcCRC"></div>
+      </div>
+      <p style="font-size:13px;color:var(--mut)">In Classical CAN, DLC 9–15 still mean 8 bytes. CAN FD reuses those codes for 12, 16, 20, 24, 32, 48 and 64 bytes.</p>
+      <p class="src">ISO 11898-1:2015 DLC coding, as given in the NXP FlexCAN and Microchip CAN FD documentation.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ REFERENCES ============ -->
+<section id="references">
+  <div class="kicker">Evidence base</div>
+  <h2>References</h2>
+  <ol class="refs glass" style="padding-left:36px">
+    <li><b>Robert Bosch GmbH (1991).</b> CAN Specification Version 2.0, Parts A &amp; B. Stuttgart. <a href="https://acoustics.sabanciuniv.edu/ee308/doc/can2spec.pdf">PDF copy</a></li>
+    <li><b>ISO 11898-1:2015 / ISO 11898-1:2024.</b> Road vehicles — Controller area network (CAN) — Part 1: Data link layer and physical coding sublayer. ISO 11898-2: High-speed physical medium attachment.</li>
+    <li><b>Tindell, K., Burns, A., Wellings, A. J. (1994).</b> Calculating Controller Area Network (CAN) message response times. Proc. IFAC DCCS’94, Toledo, pp. 35–40. Journal version: <i>Control Engineering Practice</i> 3(8), 1995.</li>
+    <li><b>Davis, R. I., Burns, A., Bril, R. J., Lukkien, J. J. (2007).</b> Controller Area Network (CAN) schedulability analysis: Refuted, revisited and revised. <i>Real-Time Systems</i> 35(3):239–272. <a href="https://link.springer.com/article/10.1007/s11241-007-9012-7">doi:10.1007/s11241-007-9012-7</a></li>
+    <li><b>Hartwich, F. (2012).</b> CAN with Flexible Data-Rate. Proc. 13th international CAN Conference (iCC), CAN in Automation. <a href="https://www2.can-cia.org/fileadmin/resources/documents/proceedings/2012_hartwich.pdf">PDF</a></li>
+    <li><b>Hartwich, F. (2013).</b> Bit Time Requirements for CAN FD. Proc. 14th iCC. <a href="https://www.bosch-semiconductors.com/media/ip_modules/pdf_2/papers/icc14_2013_paper_hartwich_1.pdf">PDF</a></li>
+    <li><b>CAN in Automation (CiA).</b> CAN HS transmission; CAN XL knowledge pages; CiA 610-1. <a href="https://www.can-cia.org/can-knowledge/can-xl">can-cia.org</a></li>
+    <li><b>Audsley, N. C. (2001).</b> On priority assignment in fixed priority scheduling. <i>Information Processing Letters</i> 79(1):39–44 (the OPA algorithm, shown to be applicable to CAN in [4]).</li>
+  </ol>
+</section>
+</main>
+<footer>CAN·Lab: built for teaching. Every number on this page is traced to the references above.</footer>
+<div class="tip" id="tip"></div>
+
+<script>
+// ===== CAN core logic (Bosch CAN 2.0 Part B; Davis et al. 2007) =====
+const CAN = (() => {
+  const POLY = 0x4599; // x15+x14+x10+x8+x7+x4+x3+1
+
+  function crc15(bits) {           // Bosch CAN 2.0 Part B, 3.2.5 algorithm
+    let reg = 0;
+    for (const b of bits) {
+      const nxt = b ^ ((reg >> 14) & 1);
+      reg = (reg << 1) & 0x7fff;
+      if (nxt) reg ^= POLY;
+    }
+    return reg;
+  }
+  const toBits = (v, n) => Array.from({ length: n }, (_, i) => (v >> (n - 1 - i)) & 1);
+
+  // Build a classical data/remote frame as an array of {f: field, b: bit, stuff: bool}
+  function buildFrame({ id, ext = false, rtr = false, data = [] }) {
+    const dlc = rtr ? Math.min(data.length, 8) : data.length;
+    const f = [];
+    const push = (field, bits) => bits.forEach(b => f.push({ f: field, b }));
+    push('SOF', [0]);
+    if (!ext) {
+      push('ID', toBits(id & 0x7ff, 11));
+      push('RTR', [rtr ? 1 : 0]);
+      push('IDE', [0]);
+      push('r0', [0]);
+    } else {
+      push('ID', toBits((id >>> 18) & 0x7ff, 11));
+      push('SRR', [1]);
+      push('IDE', [1]);
+      push('ID', toBits(id & 0x3ffff, 18));
+      push('RTR', [rtr ? 1 : 0]);
+      push('r1', [0]);
+      push('r0', [0]);
+    }
+    push('DLC', toBits(dlc, 4));
+    if (!rtr) data.forEach(byte => push('DATA', toBits(byte, 8)));
+    const crc = crc15(f.map(x => x.b));
+    push('CRC', toBits(crc, 15));
+    // bit stuffing over SOF..CRC sequence
+    const stuffed = [];
+    let last = -1, run = 0;
+    for (const x of f) {
+      stuffed.push({ ...x, stuff: false });
+      if (x.b === last) run++; else { last = x.b; run = 1; }
+      if (run === 5) {
+        const s = 1 - last;
+        stuffed.push({ f: x.f, b: s, stuff: true });
+        last = s; run = 1;
+      }
+    }
+    const tail = [];
+    const pt = (field, bits) => bits.forEach(b => tail.push({ f: field, b, stuff: false }));
+    pt('CRC del', [1]); pt('ACK', [0]); pt('ACK del', [1]);
+    pt('EOF', [1, 1, 1, 1, 1, 1, 1]); pt('IFS', [1, 1, 1]);
+    const all = stuffed.concat(tail);
+    return { bits: all, crc, dlc, stuffCount: stuffed.length - f.length, unstuffedLen: f.length + 13 };
+  }
+
+  // Bit-wise arbitration over SOF + ID + RTR (standard format)
+  function arbitrate(nodes) {
+    const seqs = nodes.map(n => [0, ...toBits(n.id & 0x7ff, 11), n.rtr ? 1 : 0]);
+    let alive = nodes.map((_, i) => i);
+    const steps = [];
+    for (let k = 0; k < 13; k++) {
+      const bus = Math.min(...alive.map(i => seqs[i][k])); // wired-AND: 0 dominant
+      const lost = alive.filter(i => seqs[i][k] !== bus);
+      steps.push({ k, bus, sent: seqs.map(s => s[k]), alive: [...alive], lost });
+      alive = alive.filter(i => seqs[i][k] === bus);
+    }
+    return { steps, winners: alive };
+  }
+
+  // ---- Response-time analysis: Davis, Burns, Bril, Lukkien, RTS 35(3) 2007 ----
+  const frameBits = (s, ext) => { const g = ext ? 54 : 34; return g + 8 * s + 13 + Math.floor((g + 8 * s - 1) / 4); };
+
+  function rta(msgs, bitrate, mode = 'revised') {
+    const tb = 1 / bitrate * 1000; // ms per bit
+    const M = msgs.map(m => ({ ...m, C: frameBits(m.bytes, m.ext) * tb }))
+                  .sort((a, b) => a.prio - b.prio);
+    const LIMIT = 1e5;
+    return M.map((m, i) => {
+      const hp = M.slice(0, i), lp = M.slice(i + 1), hep = M.slice(0, i + 1);
+      const B = lp.length ? Math.max(...lp.map(k => k.C)) : 0;
+      const J = m.J || 0;
+      const wq = q => {
+        let w = B + q * m.C, prev = -1;
+        while (Math.abs(w - prev) > 1e-9) {
+          prev = w;
+          w = B + q * m.C + hp.reduce((s, k) => s + Math.ceil((prev + (k.J || 0) + tb) / k.T - 1e-12) * k.C, 0);
+          if (w > LIMIT) return Infinity;
+        }
+        return w;
+      };
+      if (mode === 'original') {
+        const w = wq(0);
+        return { ...m, B, R: J + w + m.C, Q: 1 };
+      }
+      let t = m.C, prev = -1;
+      while (Math.abs(t - prev) > 1e-9) {
+        prev = t;
+        t = B + hep.reduce((s, k) => s + Math.ceil((prev + (k.J || 0)) / k.T - 1e-12) * k.C, 0);
+        if (t > LIMIT) return { ...m, B, R: Infinity, Q: Infinity };
+      }
+      const Q = Math.ceil((t + J) / m.T - 1e-12);
+      let R = 0;
+      for (let q = 0; q < Q; q++) R = Math.max(R, J + wq(q) - q * m.T + m.C);
+      return { ...m, B, R, Q, busy: t };
+    });
+  }
+
+  // ---- Fault confinement (Bosch CAN 2.0 Part B, ch. 8) ----
+  function errState(tec, rec) {
+    if (tec >= 256) return 'bus-off';
+    if (tec >= 128 || rec >= 128) return 'error-passive';
+    return 'error-active';
+  }
+
+  return { crc15, toBits, buildFrame, arbitrate, frameBits, rta, errState };
+})();
+if (typeof module !== 'undefined') module.exports = CAN;
+
+</script>
+<script>
+// ================= shared helpers =================
+const $ = s => document.querySelector(s);
+const FIELD_COL = {SOF:'#ffc861',ID:'#5ee7ff',SRR:'#7fb2ff',IDE:'#7fb2ff',RTR:'#9b8cff',r0:'#6f7a96',r1:'#6f7a96',DLC:'#ff9f6b',DATA:'#6dffb1',CRC:'#ff6bd0','CRC del':'#b05a95',ACK:'#ffe08a','ACK del':'#a8914f',EOF:'#3b4766',IFS:'#2a3350'};
+const tip = $('#tip');
+function showTip(e, html){tip.innerHTML=html;tip.style.display='block';tip.style.left=(e.clientX+14)+'px';tip.style.top=(e.clientY+14)+'px'}
+function hideTip(){tip.style.display='none'}
+
+// nav highlight
+const links=[...document.querySelectorAll('nav a')];
+const io=new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting){links.forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+en.target.id))}}),{rootMargin:'-45% 0px -50% 0px'});
+document.querySelectorAll('section').forEach(s=>io.observe(s));
+
+// ================= PHYSICAL: scope =================
+(() => {
+  const cv=$('#scope'), ctx=cv.getContext('2d');
+  let bits=[1,1,0,1,0,0,1,0,1,1,0,1,1,1,0,1];
+  const tg=$('#bitToggles');
+  function drawToggles(){tg.innerHTML='';bits.forEach((b,i)=>{const x=document.createElement('button');x.className='btn sm mono';x.style.minWidth='34px';
+    x.textContent=b;x.style.background=b?'rgba(255,255,255,.06)':'rgba(94,231,255,.28)';x.title=b?'recessive':'dominant';x.onclick=()=>{bits[i]^=1;drawToggles()};tg.appendChild(x)})}
+  drawToggles();
+  let t0=performance.now();
+  function frame(now){
+    const W=cv.width=cv.clientWidth*devicePixelRatio, H=cv.height=cv.clientHeight*devicePixelRatio;
+    ctx.clearRect(0,0,W,H);
+    const nz=+$('#noise').value; $('#nzv').textContent=nz.toFixed(1)+' V';
+    const showD=$('#showDiff').checked;
+    const pad=40*devicePixelRatio, vmin=-1, vmax=6;
+    const y=v=>H-pad/2-(v-vmin)/(vmax-vmin)*(H-pad);
+    const bw=(W-pad)/bits.length;
+    ctx.font=(11*devicePixelRatio)+'px JetBrains Mono';
+    // grid
+    ctx.strokeStyle='rgba(255,255,255,.07)';ctx.fillStyle='#93a0bd';
+    for(let v=0;v<=5;v++){ctx.beginPath();ctx.moveTo(pad,y(v));ctx.lineTo(W,y(v));ctx.stroke();ctx.fillText(v+' V',4,y(v)+4)}
+    bits.forEach((b,i)=>{ctx.fillStyle=b?'rgba(255,255,255,.02)':'rgba(94,231,255,.07)';ctx.fillRect(pad+i*bw,0,bw-1,H);
+      ctx.fillStyle='#93a0bd';ctx.fillText(b?'R':'D',pad+i*bw+bw/2-4,14*devicePixelRatio)});
+    const tt=(now-t0)/1000;
+    const cm=x=>nz*Math.sin(x*0.025+tt*3)*0.6+nz*0.4*Math.sin(x*0.11+tt*7);
+    const trace=(col,f,lw=2)=>{ctx.strokeStyle=col;ctx.lineWidth=lw*devicePixelRatio;ctx.beginPath();
+      for(let x=pad;x<W;x+=2){const i=Math.min(bits.length-1,Math.floor((x-pad)/bw));const v=f(bits[i],x);x===pad?ctx.moveTo(x,y(v)):ctx.lineTo(x,y(v))}ctx.stroke()};
+    trace('#5ee7ff',(b,x)=>(b?2.5:3.5)+cm(x));
+    trace('#ff6bd0',(b,x)=>(b?2.5:1.5)+cm(x));
+    if(showD){
+      ctx.setLineDash([6,6]);ctx.strokeStyle='#ffc861';ctx.lineWidth=1;
+      [0.5,0.9].forEach(v=>{ctx.beginPath();ctx.moveTo(pad,y(v));ctx.lineTo(W,y(v));ctx.stroke()});ctx.setLineDash([]);
+      trace('#6dffb1',(b)=>b?0:2,2.5);
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+
+// ================= FRAME BUILDER =================
+let lastFrame=null;
+function parseHex(s){return s.trim().split(/[\s,]+/).filter(Boolean).map(h=>parseInt(h,16)).filter(n=>!isNaN(n)&&n>=0&&n<=255)}
+function renderFrame(){
+  const ext=$('#fext').checked, rtr=$('#frtr').checked;
+  let id=parseInt($('#fid').value,16)||0; id=ext?(id>>>0)&0x1fffffff:id&0x7ff;
+  let data=parseHex($('#fdata').value).slice(0,8);
+  const fr=CAN.buildFrame({id,ext,rtr,data}); lastFrame=fr;
+  const used=[...new Set(fr.bits.map(b=>b.f))];
+  $('#flegend').innerHTML=used.map(f=>`<span><i style="background:${FIELD_COL[f]}"></i>${f}</span>`).join('')+'<span><i style="outline:2px dashed #fff;outline-offset:-2px"></i>stuff bit</span>';
+  const box=$('#fbits'); box.innerHTML='';
+  fr.bits.forEach((b,i)=>{const d=document.createElement('div');d.className='bit'+(b.stuff?' s':'');d.textContent=b.b;
+    const c=FIELD_COL[b.f];d.style.background=b.b?c+'33':c;d.style.color=b.b?c:'#06101f';
+    d.onmousemove=e=>showTip(e,`#${i} · <b>${b.f}</b>${b.stuff?' (stuff)':''} · ${b.b?'recessive 1':'dominant 0'}`);d.onmouseleave=hideTip;box.appendChild(d)});
+  const br=+$('#fbr').value, n=fr.bits.length;
+  const worst=CAN.frameBits(rtr?0:data.length,ext);
+  const st=[['Total bits (incl. IFS)',n],['Stuff bits',fr.stuffCount],['CRC-15','0x'+fr.crc.toString(16).toUpperCase().padStart(4,'0')],
+    ['DLC',fr.dlc],['Frame time',(n/br*1e6).toFixed(1)+' µs'],['Worst case (Davis Eq.1)',worst+' bits'],['Payload efficiency',(rtr?0:(data.length*8/n*100)).toFixed(1)+' %']];
+  $('#fstats').innerHTML=st.map(([k,v])=>`<div class="stat">${v}<small>${k}</small></div>`).join('');
+}
+['#fid','#fdata'].forEach(s=>$(s).addEventListener('input',renderFrame));
+['#fext','#frtr','#fbr'].forEach(s=>$(s).addEventListener('change',renderFrame));
+$('#fzero').onclick=()=>{$('#fid').value='0';$('#fext').checked=false;$('#frtr').checked=false;$('#fdata').value='00 00 00 00 00 00 00 00';renderFrame()};
+renderFrame();
+
+// ================= ARBITRATION =================
+(() => {
+  let nodes=[{n:'Engine',id:'0A0',rtr:false},{n:'Brakes',id:'0C8',rtr:false},{n:'Airbag',id:'050',rtr:false},{n:'Dashboard',id:'052',rtr:false}];
+  let k=0, res=null;
+  const inp=$('#arbIn');
+  function drawIn(){inp.innerHTML=nodes.map((x,i)=>`<div class="row" style="margin-bottom:6px"><span style="width:84px">${x.n}</span><label>ID 0x<input data-i="${i}" class="aid" value="${x.id}" size="4"></label><label><input type="checkbox" data-i="${i}" class="artr" ${x.rtr?'checked':''}> remote</label></div>`).join('');
+    inp.querySelectorAll('.aid').forEach(el=>el.oninput=()=>{nodes[+el.dataset.i].id=el.value;reset()});
+    inp.querySelectorAll('.artr').forEach(el=>el.onchange=()=>{nodes[+el.dataset.i].rtr=el.checked;reset()})}
+  function compute(){res=CAN.arbitrate(nodes.map(x=>({id:parseInt(x.id,16)&0x7ff,rtr:x.rtr})))}
+  function draw(){
+    const hdr=['SOF',...Array.from({length:11},(_,i)=>'ID'+(10-i)),'RTR'];
+    let h='<tr><th>Node</th>'+hdr.map(x=>`<th style="text-align:center;font-size:10px">${x}</th>`).join('')+'</tr>';
+    nodes.forEach((x,i)=>{h+=`<tr><td style="text-align:left;white-space:nowrap">${x.n} <span style="color:var(--mut)">0x${(parseInt(x.id,16)&0x7ff).toString(16).toUpperCase().padStart(3,'0')}</span></td>`;
+      res.steps.forEach((s,j)=>{if(j>=k){h+='<td></td>';return}const out=!s.alive.includes(i);const v=s.sent[i];
+        h+=`<td class="${out?'x':(v?'r':'d')}" ${s.lost.includes(i)?'style="box-shadow:inset 0 0 0 2px var(--rd)"':''}>${out?'·':v}</td>`});h+='</tr>'});
+    h+='<tr class="bus"><td style="text-align:left"><b>Bus</b></td>'+res.steps.map((s,j)=>j<k?`<td class="${s.bus?'r':'d'}">${s.bus}</td>`:'<td></td>').join('')+'</tr>';
+    $('#arbT').innerHTML=h;
+    let msg='';
+    if(k===0) msg='Press <b>Step bit</b>. Each node sends a bit and reads the bus back.';
+    else{const s=res.steps[k-1];msg=`Bit ${hdr[k-1]}: bus = <b>${s.bus?'recessive 1':'dominant 0'}</b>. `+(s.lost.length?s.lost.map(i=>`<span class="bad">${nodes[i].n} lost (sent 1, read 0)</span>`).join(', '):'No one lost on this bit.');
+      if(k===13){const w=res.winners;msg+= w.length===1?`<br><span class="ok">Winner: ${nodes[w[0]].n}. Its frame continues undisturbed, and the losers retry automatically once the bus is idle.</span>`:`<br><span class="bad">Tie between ${w.map(i=>nodes[i].n).join(' & ')}: identical ID and frame type. The specification forbids this; a bit error would follow in the data/control field.</span>`}}
+    $('#arbMsg').innerHTML=msg;
+  }
+  function reset(){k=0;compute();draw()}
+  $('#arbStep').onclick=()=>{if(k<13){k++;draw()}};
+  $('#arbRun').onclick=()=>{k=13;draw()};
+  $('#arbReset').onclick=reset;
+  drawIn();reset();
+})();
+
+// ================= ERRORS =================
+(() => {
+  let tec=0, rec=0; const log=[];
+  function upd(note){
+    const s=CAN.errState(tec,rec);
+    const el=$('#est'); el.textContent=s.toUpperCase();
+    const c={ 'error-active':'var(--gr)','error-passive':'var(--am)','bus-off':'var(--rd)'}[s];
+    el.style.color=c; el.style.background='rgba(255,255,255,.06)'; el.style.border='1px solid '+c;
+    $('#tecv').textContent=tec; $('#recv').textContent=rec;
+    $('#tecb').style.width=Math.min(100,tec/256*100)+'%'; $('#recb').style.width=Math.min(100,rec/256*100)+'%';
+    $('#tecb').style.background=$('#recb').style.background=c;
+    if(note){log.unshift(`${note} → TEC=${tec}, REC=${rec} [${s}]`);$('#elog').innerHTML=log.slice(0,30).join('<br>')}
+  }
+  document.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>{
+    const e=b.dataset.e, off=CAN.errState(tec,rec)==='bus-off';
+    if(off && !['recover','reset'].includes(e)){upd('Node is bus-off: it ignores bus activity');return}
+    if(e==='txerr'){tec+=8;upd('TX error flag')}
+    if(e==='txok'){if(tec>0)tec--;upd('Successful transmission')}
+    if(e==='rxerr'){rec+=1;upd('RX error detected')}
+    if(e==='rxdom'){rec+=8;upd('Dominant bit after own error flag')}
+    if(e==='rxok'){if(rec>127)rec=127;else if(rec>0)rec--;upd('Successful reception')}
+    if(e==='burst'){for(let i=0;i<10&&tec<256;i++)tec+=8;upd('10 consecutive TX errors')}
+    if(e==='recover'){if(off){tec=0;rec=0;upd('128 × 11 recessive bits observed: recovered')}else upd('Recovery only applies in bus-off')}
+    if(e==='reset'){tec=0;rec=0;log.length=0;$('#elog').innerHTML='';upd()}
+  });
+  upd();
+})();
+
+// ================= BIT TIMING =================
+(() => {
+  function calc(){
+    const f=parseFloat($('#tclk').value)*1e6, br=+$('#tbr').value, n=+$('#tntq').value, sp=+$('#tsp').value/100;
+    $('#tntqv').textContent=n; $('#tspv').textContent=(sp*100).toFixed(0)+' %';
+    const pre=f/(br*n);
+    const tseg1=Math.round(sp*n)-1, tseg2=n-1-tseg1, sjw=parseInt($('#tsjw').value)||1;
+    const real=(1+tseg1)/n;
+    const checks=[
+      [n>=8&&n<=25,'8 ≤ N_TQ ≤ 25'],
+      [Math.abs(pre-Math.round(pre))<1e-9&&pre>=1&&pre<=32,`Prescaler = ${+pre.toFixed(4)} (must be an integer from 1 to 32)`],
+      [tseg2>=2&&tseg2<=8,`PHASE_SEG2 = ${tseg2} TQ within ISO 11898-1 minimum range 2–8 TQ`],
+      [sjw>=1&&sjw<=Math.min(4,tseg2,tseg1),`SJW = ${sjw}: 1–4 TQ and ≤ both phase segments`]];
+    const tq=1/(br*n)*1e9;
+    $('#tbar').innerHTML=`<div style="flex:1;background:#ffc861;color:#000">SYNC</div><div style="flex:${tseg1};background:#5ee7ff55">TSEG1 = PROP + PHASE1 = ${tseg1} TQ</div><div style="flex:${tseg2};background:#ff6bd055">PHASE2 = ${tseg2}</div>`;
+    $('#tbar').style.position='relative';
+    $('#tout').innerHTML=`Sample point = <b>${(real*100).toFixed(1)} %</b> · TQ = ${tq.toFixed(1)} ns · bit time = ${(1e6/br).toFixed(2)} µs<br>`+checks.map(([ok,t])=>`<span class="${ok?'ok':'bad'}">${ok?'✔':'✘'} ${t}</span>`).join('<br>');
+  }
+  ['#tclk','#tsjw'].forEach(s=>$(s).addEventListener('input',calc));['#tbr','#tntq','#tsp'].forEach(s=>$(s).addEventListener('input',calc));
+  calc();
+})();
+
+// ================= RTA =================
+(() => {
+  let msgs=[];
+  const davis=()=>{$('#rbr').value='125000';msgs=[{name:'A',prio:1,T:2.5,D:2.5,J:0,bytes:7,ext:false},{name:'B',prio:2,T:3.5,D:3.25,J:0,bytes:7,ext:false},{name:'C',prio:3,T:3.5,D:3.25,J:0,bytes:7,ext:false}]};
+  const sample=()=>{$('#rbr').value='500000';msgs=[
+    {name:'0x050',prio:1,T:5,D:5,J:0.1,bytes:8,ext:false},{name:'0x0A0',prio:2,T:10,D:10,J:0.2,bytes:8,ext:false},
+    {name:'0x0C8',prio:3,T:10,D:10,J:0.2,bytes:6,ext:false},{name:'0x120',prio:4,T:20,D:20,J:0.5,bytes:8,ext:false},
+    {name:'0x2F0',prio:5,T:50,D:50,J:1,bytes:4,ext:false},{name:'0x3E8',prio:6,T:100,D:100,J:2,bytes:8,ext:false}]};
+  function draw(){
+    const br=+$('#rbr').value, mode=$('#rmode').value;
+    const res=CAN.rta(msgs,br,mode); const byName={}; res.forEach(r=>byName[r.name+'|'+r.prio]=r);
+    const U=res.reduce((s,r)=>s+r.C/r.T,0);
+    let h='<tr><th>Msg</th><th>Priority</th><th>T (ms)</th><th>D (ms)</th><th>J (ms)</th><th>Bytes</th><th>29-bit</th><th>C (ms)</th><th>B (ms)</th><th>Q</th><th>R (ms)</th><th>R vs D</th><th></th></tr>';
+    msgs.forEach((m,i)=>{const r=byName[m.name+'|'+m.prio]; const ok=r.R<=m.D+1e-9;
+      const maxv=Math.max(m.D,isFinite(r.R)?r.R:m.D)*1.1;
+      h+=`<tr><td><input class="nm" data-i="${i}" data-k="name" value="${m.name}"></td>`+['prio','T','D','J','bytes'].map(k=>`<td><input data-i="${i}" data-k="${k}" value="${m[k]}"></td>`).join('')+
+      `<td><input type="checkbox" data-i="${i}" data-k="ext" ${m.ext?'checked':''}></td><td class="mono">${r.C.toFixed(3)}</td><td class="mono">${r.B.toFixed(3)}</td><td class="mono">${isFinite(r.Q)?r.Q:'∞'}</td>`+
+      `<td class="mono ${ok?'ok':'bad'}"><b>${isFinite(r.R)?r.R.toFixed(3):'∞'}</b></td><td><div class="rbar"><b style="width:${isFinite(r.R)?Math.min(100,r.R/maxv*100):100}%;background:${ok?'var(--gr)':'var(--rd)'}"></b><i style="left:${m.D/maxv*100}%"></i></div></td><td><button class="btn sm" data-del="${i}">✕</button></td></tr>`});
+    $('#rtab').innerHTML=h;
+    const all=res.every(r=>r.R<=r.D+1e-9);
+    $('#rsum').innerHTML=`Bus utilisation U = <b>${(U*100).toFixed(1)} %</b> · ${all?'<span class="ok">All messages schedulable under this analysis</span>':'<span class="bad">At least one message can miss its deadline</span>'} · amber marker = deadline`;
+    $('#rtab').querySelectorAll('input').forEach(el=>el.onchange=()=>{const m=msgs[+el.dataset.i],k=el.dataset.k;m[k]=k==='ext'?el.checked:(k==='name'?el.value:Math.max(k==='bytes'?0:0,Math.min(k==='bytes'?8:1e6,parseFloat(el.value)||0)));if(k==='T'&&m.T<=0)m.T=1;draw()});
+    $('#rtab').querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{msgs.splice(+b.dataset.del,1);draw()});
+  }
+  $('#rdavis').onclick=()=>{davis();draw()};$('#rsample').onclick=()=>{sample();draw()};
+  $('#radd').onclick=()=>{msgs.push({name:'M'+(msgs.length+1),prio:msgs.length+1,T:20,D:20,J:0,bytes:8,ext:false});draw()};
+  $('#rbr').onchange=draw;$('#rmode').onchange=draw;
+  davis();draw();
+})();
+
+// ================= DLC =================
+(() => {const FD=[0,1,2,3,4,5,6,7,8,12,16,20,24,32,48,64];
+  const u=()=>{const d=+$('#dlc').value;$('#dlcv').textContent=d+' (0b'+d.toString(2).padStart(4,'0')+')';
+    $('#dlcCC').innerHTML=Math.min(d,8)+' B<small>Classical CAN</small>';$('#dlcFD').innerHTML=FD[d]+' B<small>CAN FD</small>';$('#dlcCRC').innerHTML=(FD[d]>16?21:17)+' bit<small>FD CRC</small>'};
+  $('#dlc').oninput=u;u()})();
+</script>
+
+<!-- ================= 3D SCENE ================= -->
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+const host=document.getElementById('stage');
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(2,devicePixelRatio));
+host.prepend(renderer.domElement);
+const scene=new THREE.Scene();
+scene.fog=new THREE.Fog(0x060a14,18,40);
+const cam=new THREE.PerspectiveCamera(42,1,0.1,100); cam.position.set(0,7.5,15);
+const ctl=new OrbitControls(cam,renderer.domElement); ctl.enableDamping=true; ctl.autoRotate=true; ctl.autoRotateSpeed=0.6; ctl.maxDistance=28; ctl.minDistance=6;
+document.getElementById('spin').onclick=()=>ctl.autoRotate=!ctl.autoRotate;
+scene.add(new THREE.AmbientLight(0x8899ff,0.6));
+const dl=new THREE.DirectionalLight(0xffffff,1.2); dl.position.set(5,10,7); scene.add(dl);
+const p1=new THREE.PointLight(0x5ee7ff,30,30); p1.position.set(-6,4,3); scene.add(p1);
+const p2=new THREE.PointLight(0xff6bd0,30,30); p2.position.set(6,4,-3); scene.add(p2);
+
+// floor grid
+const grid=new THREE.GridHelper(40,40,0x223355,0x111a2e); grid.position.y=-2.2; scene.add(grid);
+
+// twisted pair
+const L=9;
+function helix(phase,color){
+  const pts=[];for(let i=0;i<=400;i++){const x=-L+i/400*2*L;const a=x*3+phase;pts.push(new THREE.Vector3(x,Math.sin(a)*0.12,Math.cos(a)*0.12))}
+  const g=new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),800,0.055,8,false);
+  const m=new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:0.35,metalness:0.3,roughness:0.35});
+  const mesh=new THREE.Mesh(g,m);scene.add(mesh);return mesh}
+helix(0,0x5ee7ff); helix(Math.PI,0xff6bd0);
+
+function label(text,color='#e8eefc',scale=1){
+  const c=document.createElement('canvas');c.width=512;c.height=128;const x=c.getContext('2d');
+  x.font='600 44px Inter, sans-serif';x.fillStyle=color;x.textAlign='center';x.textBaseline='middle';x.fillText(text,256,64);
+  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthWrite:false}));
+  s.scale.set(3.2*scale,0.8*scale,1);return s}
+
+// termination resistors
+[-L-0.4,L+0.4].forEach(x=>{
+  const g=new THREE.Group();
+  const body=new THREE.Mesh(new THREE.CylinderGeometry(0.16,0.16,0.7,24),new THREE.MeshStandardMaterial({color:0xd8c39a,roughness:0.6}));
+  body.rotation.z=Math.PI/2; g.add(body);
+  [0x8b4513,0xff0000,0x000000].forEach((c,i)=>{const b=new THREE.Mesh(new THREE.CylinderGeometry(0.165,0.165,0.06,24),new THREE.MeshStandardMaterial({color:c}));b.rotation.z=Math.PI/2;b.position.x=-0.2+i*0.14;g.add(b)});
+  g.position.set(x,0,0); g.rotation.y=Math.PI/2; scene.add(g);
+  const lb=label('120 Ω','#ffc861',0.7); lb.position.set(x,0.75,0); scene.add(lb);
+});
+
+// ECUs
+const ECUS=[{n:'Airbag',id:0x050,x:-6,z:-2.6},{n:'Engine',id:0x0A0,x:-2.5,z:2.6},{n:'Brakes',id:0x0C8,x:1,z:-2.6},{n:'Body',id:0x2F0,x:4.5,z:2.6},{n:'Dashboard',id:0x3E8,x:7.2,z:-2.6}];
+const pickables=[];
+ECUS.forEach(e=>{
+  const g=new THREE.Group(); g.position.set(e.x,0,e.z);
+  const mat=new THREE.MeshPhysicalMaterial({color:0x1b2a4a,metalness:0.1,roughness:0.15,transmission:0.35,thickness:0.6,clearcoat:1,emissive:0x5ee7ff,emissiveIntensity:0.05});
+  const box=new THREE.Mesh(new THREE.BoxGeometry(1.8,0.9,1.2),mat); box.position.y=0.7; g.add(box);
+  const chip=new THREE.Mesh(new THREE.BoxGeometry(0.6,0.12,0.6),new THREE.MeshStandardMaterial({color:0x0a0f1a,metalness:0.6,roughness:0.3})); chip.position.set(0,1.21,0); g.add(chip);
+  const led=new THREE.Mesh(new THREE.SphereGeometry(0.08,16,16),new THREE.MeshStandardMaterial({color:0x6dffb1,emissive:0x6dffb1,emissiveIntensity:1.5})); led.position.set(0.65,1.2,0.4); g.add(led);
+  // stub
+  const len=Math.abs(e.z); const stub=new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,len,8),new THREE.MeshStandardMaterial({color:0x9aa7c7,emissive:0x334466}));
+  stub.rotation.x=Math.PI/2; stub.position.set(0,0,-Math.sign(e.z)*len/2); g.add(stub);
+  const lb=label(`${e.n} · 0x${e.id.toString(16).toUpperCase().padStart(3,'0')}`,'#e8eefc',0.75); lb.position.set(0,1.75,0); g.add(lb);
+  scene.add(g); e.g=g; e.box=box; e.led=led; e.mat=mat; box.userData.e=e; pickables.push(box);
+});
+
+// pulses
+const pulses=[]; const pg=new THREE.SphereGeometry(0.11,12,12);
+function emit(e,bit,delay){
+  for(const dir of [-1,1]){
+    const m=new THREE.Mesh(pg,new THREE.MeshBasicMaterial({color:bit?0x41506e:0x5ee7ff,transparent:true,opacity:bit?0.6:1}));
+    m.visible=false; scene.add(m); pulses.push({m,x:e.x,dir,t:-delay,src:e});
+  }
+}
+const logEl=document.getElementById('log3d');
+function say(h){logEl.innerHTML=h}
+function transmit(e,bitsLimit){
+  const fr=CAN.buildFrame({id:e.id,data:[0x12,0x34,0x56,0x78]});
+  const bits=fr.bits.slice(0,bitsLimit??fr.bits.length);
+  bits.forEach((b,i)=>emit(e,b.b,i*0.045));
+  flash(e,0x5ee7ff);
+  return fr;
+}
+function flash(e,c){e.mat.emissive.setHex(c);e.mat.emissiveIntensity=0.7;e.led.material.color.setHex(c);e.led.material.emissive.setHex(c);
+  clearTimeout(e._t);e._t=setTimeout(()=>{e.mat.emissive.setHex(0x5ee7ff);e.mat.emissiveIntensity=0.05;e.led.material.color.setHex(0x6dffb1);e.led.material.emissive.setHex(0x6dffb1)},2600)}
+const ray=new THREE.Raycaster(), mv=new THREE.Vector2();
+renderer.domElement.addEventListener('pointerdown',ev=>{const r=renderer.domElement.getBoundingClientRect();
+  mv.set((ev.clientX-r.left)/r.width*2-1,-(ev.clientY-r.top)/r.height*2+1); ray.setFromCamera(mv,cam);
+  const hit=ray.intersectObjects(pickables)[0]; if(!hit)return; const e=hit.object.userData.e;
+  const fr=transmit(e); say(`<b style="color:#e8eefc">${e.n}</b> transmits ID 0x${e.id.toString(16).toUpperCase().padStart(3,'0')}: ${fr.bits.length} bits incl. ${fr.stuffCount} stuff bits, CRC 0x${fr.crc.toString(16).toUpperCase()}. Every node receives the frame, and each one's acceptance filter decides whether to keep it.`)});
+document.getElementById('race').onclick=()=>{
+  const res=CAN.arbitrate(ECUS.map(e=>({id:e.id})));
+  const lostAt={}; res.steps.forEach(s=>s.lost.forEach(i=>lostAt[i]=s.k));
+  ECUS.forEach((e,i)=>{ if(i in lostAt){transmit(e,lostAt[i]+1); setTimeout(()=>flash(e,0xff6b7d),(lostAt[i]+1)*45)} });
+  const w=ECUS[res.winners[0]]; transmit(w);
+  say(`All 5 ECUs start together. Losers drop out at the first ID bit where they send recessive and read dominant: `+
+    Object.entries(lostAt).map(([i,k])=>`${ECUS[i].n}@bit ${k===0?'SOF':'ID'+(11-k)}`).join(', ')+`. <b style="color:#6dffb1">${w.n} (lowest ID 0x${w.id.toString(16).toUpperCase().padStart(3,'0')}) wins</b> without losing any bus time.`);
+};
+function resize(){const w=host.clientWidth,h=host.clientHeight;renderer.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}
+new ResizeObserver(resize).observe(host); resize();
+const clock=new THREE.Clock(); const SPEED=7;
+function loop(){
+  const dt=Math.min(0.05,clock.getDelta());
+  for(let i=pulses.length-1;i>=0;i--){const p=pulses[i];p.t+=dt;
+    if(p.t<0)continue; p.m.visible=true;
+    const x=p.src.x+p.dir*p.t*SPEED; p.m.position.set(x,Math.sin(p.t*30)*0.03,0);
+    if(x<-L||x>L){scene.remove(p.m);p.m.material.dispose();pulses.splice(i,1)}}
+  ctl.update(); renderer.render(scene,cam); requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>
