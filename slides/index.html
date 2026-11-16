@@ -76,7 +76,8 @@ th{color:var(--dim);font:500 13px Inter;text-transform:uppercase;letter-spacing:
 .gantt .mtxt{position:absolute;top:-30px;font:600 13px "JetBrains Mono";white-space:nowrap;transform:translateX(-50%)}
 /* plot bar */
 #plot{position:fixed;left:50%;top:14px;transform:translateX(-50%);display:flex;gap:6px;z-index:25}
-#plot span{font:600 11px "JetBrains Mono";letter-spacing:.12em;color:var(--dim);padding:5px 10px;border-radius:99px;border:1px solid transparent;transition:.4s}
+#plot em{font-style:normal}@media(max-width:1100px){#plot em{display:none}}
+#plot span{white-space:nowrap;font:600 11px "JetBrains Mono";letter-spacing:.12em;color:var(--dim);padding:5px 10px;border-radius:99px;border:1px solid transparent;transition:.4s}
 #plot span.on{color:var(--ink);background:var(--amb)}
 #plot span.done{color:var(--mut);border-color:var(--line)}
 #ui{position:fixed;right:16px;bottom:12px;display:flex;gap:8px;align-items:center;z-index:25;opacity:.35;transition:opacity .3s}
@@ -444,7 +445,7 @@ On the bus:  0 0 0 0 0 <span class="amb">1</span> 0 0 1   ← stuff bit</div>
 const slides=[...document.querySelectorAll('.slide')];let cur=0;const stage=document.getElementById('stage');
 function fit(){const s=Math.min(innerWidth/1600,innerHeight/900);stage.style.transform=`translate(-50%,-50%) scale(${s})`}
 addEventListener('resize',fit);fit();
-const ACTS=['I','II','III','IV','V','VI'];const NAMES={I:'I · The rules',II:'II · The night',III:'III · The villain',IV:'IV · The promise',V:'V · The twist',VI:'VI · Epilogue'};
+const ACTS=['I','II','III','IV','V','VI'];const NAMES={I:'I<em> · The rules</em>',II:'II<em> · The night</em>',III:'III<em> · The villain</em>',IV:'IV<em> · The promise</em>',V:'V<em> · The twist</em>',VI:'VI<em> · Epilogue</em>'};
 document.getElementById('plot').innerHTML=ACTS.map(a=>`<span data-a="${a}">${NAMES[a]}</span>`).join('');
 function go(n,fromHash){
   n=Math.max(0,Math.min(slides.length-1,n));slides.forEach((s,i)=>s.classList.toggle('active',i===n));cur=n;
