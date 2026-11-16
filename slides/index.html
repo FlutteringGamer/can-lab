@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAN: The Network That Never Collides — Slides</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#060a14;--txt:#eef3fb;--mut:#a9b6cf;--dim:#6f7d99;--cy:#5ee7ff;--or:#ffb25e;--gr:#6dffb1;--rd:#ff6b7d;--vi:#9b8cff;--line:rgba(255,255,255,.12);--glass:rgba(255,255,255,.055)}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font-family:Inter,system-ui,sans-serif;overflow:hidden}
+#viewport{position:fixed;inset:0;display:grid;place-items:center}
+#stage{width:1600px;height:900px;position:relative;transform-origin:center center;flex:none}
+#bgfx{position:fixed;inset:-20%;z-index:-1;background:
+  radial-gradient(38% 34% at 12% 12%,rgba(94,231,255,.16),transparent 70%),
+  radial-gradient(34% 34% at 88% 18%,rgba(155,140,255,.18),transparent 70%),
+  radial-gradient(44% 40% at 60% 96%,rgba(255,178,94,.10),transparent 70%);filter:blur(8px);animation:drift 24s ease-in-out infinite alternate}
+@keyframes drift{to{transform:translate3d(-3%,2%,0) scale(1.05)}}
+.slide{position:absolute;inset:0;padding:84px 100px 96px;display:flex;flex-direction:column;gap:30px;opacity:0;pointer-events:none;transition:opacity .6s ease, transform .8s cubic-bezier(.2,.7,.2,1);transform:translateY(18px) scale(.985)}
+.slide.active{opacity:1;pointer-events:auto;transform:none}
+.slide.past{transform:translateY(-18px) scale(.985)}
+.a{opacity:0;transform:translateY(22px);filter:blur(6px)}
+.slide.active .a{animation:up .8s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i,0) * 110ms + 180ms)}
+@keyframes up{to{opacity:1;transform:none;filter:none}}
+h1,h2,h3{font-family:"Space Grotesk",Inter,sans-serif;margin:0;letter-spacing:-.02em}
+h1{font-size:92px;line-height:1.02;font-weight:700}
+h2{font-size:54px;line-height:1.08;font-weight:700}
+h3{font-size:24px;font-weight:600;margin-bottom:6px}
+p{margin:0}
+.eyebrow{font:600 16px/1 "JetBrains Mono",monospace;letter-spacing:.18em;color:var(--cy);text-transform:uppercase}
+.lead{font-size:24px;line-height:1.5;color:var(--mut)}
+.body{font-size:19px;line-height:1.5;color:var(--mut)}
+.mono{font-family:"JetBrains Mono",monospace}
+.hl{color:var(--cy)}.warm{color:var(--or)}.ok{color:var(--gr)}.bad{color:var(--rd)}
+.grad{background:linear-gradient(100deg,#fff 10%,var(--cy) 55%,var(--vi));-webkit-background-clip:text;background-clip:text;color:transparent}
+.glass{background:var(--glass);border:1px solid var(--line);border-radius:22px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 12px 40px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.07)}
+.card{padding:24px 26px;display:flex;flex-direction:column;gap:8px;flex:1}
+.row{display:flex;gap:22px}
+.col{display:flex;flex-direction:column;gap:18px}
+.split{display:grid;grid-template-columns:1fr 1.15fr;gap:36px;flex:1;min-height:0}
+.three{position:relative;border-radius:22px;overflow:hidden;min-height:0;flex:1}
+.three canvas{position:absolute;inset:0;width:100%!important;height:100%!important;display:block}
+.three .ov{position:absolute;left:18px;bottom:16px;font:600 16px "JetBrains Mono";color:var(--mut);pointer-events:none;text-shadow:0 1px 8px #000}
+.num{font:700 58px/1 "Space Grotesk";color:var(--cy)}
+.src{position:absolute;left:100px;right:100px;bottom:40px;font-size:14px;color:var(--dim)}
+table{border-collapse:collapse;width:100%;font-size:19px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line)}
+th{color:var(--dim);font-weight:500;font-size:15px;text-transform:uppercase;letter-spacing:.06em}
+.pill{display:inline-block;padding:4px 12px;border-radius:99px;border:1px solid currentColor;font:600 14px "JetBrains Mono"}
+.code{background:rgba(0,0,0,.4);border:1px solid var(--line);border-radius:16px;padding:18px 22px;font:18px/1.75 "JetBrains Mono";color:#dce5f5;white-space:pre}
+.big{font:700 64px/1.12 "Space Grotesk";letter-spacing:-.02em}
+.accent-bg{position:absolute;inset:0;background:linear-gradient(135deg,#5ee7ff 0%,#8fd0ff 45%,#b9a8ff 100%);z-index:-1}
+.slide.accentS{color:#071022}
+.slide.accentS .eyebrow{color:#0b2a44}.slide.accentS .lead{color:#173554}.slide.accentS .src{color:#284a6b}
+/* gantt */
+.gantt{position:relative;height:250px;margin-top:6px}
+.gantt .lane{position:absolute;left:70px;right:20px;height:44px;border-bottom:1px dashed var(--line)}
+.gantt .lab{position:absolute;left:0;width:60px;font:600 20px "JetBrains Mono";line-height:44px}
+.gantt .bar{position:absolute;top:6px;height:32px;border-radius:8px;transform-origin:left;transform:scaleX(0);display:grid;place-items:center;font:600 14px "JetBrains Mono";color:#071022}
+.slide.active .gantt .bar{animation:grow .45s ease-out both;animation-delay:calc(var(--t) * 420ms + 700ms)}
+@keyframes grow{to{transform:scaleX(1)}}
+.gantt .tick{position:absolute;bottom:-26px;font:13px "JetBrains Mono";color:var(--dim);transform:translateX(-50%)}
+.gantt .mark{position:absolute;top:-6px;bottom:0;width:0;border-left:2px dashed}
+.gantt .mtxt{position:absolute;top:-30px;font:600 13px "JetBrains Mono";white-space:nowrap;transform:translateX(-50%)}
+/* chrome */
+#bar{position:fixed;left:0;top:0;height:3px;background:linear-gradient(90deg,var(--cy),var(--vi));transition:width .5s ease;z-index:20}
+#ui{position:fixed;right:18px;bottom:14px;display:flex;gap:8px;align-items:center;z-index:20;opacity:.35;transition:opacity .3s}
+#ui:hover{opacity:1}
+#ui button,#ui a{background:rgba(255,255,255,.07);border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:6px 11px;font:500 13px Inter;cursor:pointer;text-decoration:none}
+#count{font:600 13px "JetBrains Mono";color:var(--mut);min-width:54px;text-align:center}
+#notes{position:fixed;left:18px;right:18px;bottom:58px;max-height:30vh;overflow:auto;background:rgba(6,10,20,.92);border:1px solid var(--line);border-radius:14px;padding:14px 18px;font-size:15px;line-height:1.55;color:var(--mut);display:none;z-index:20}
+#notes.on{display:block}
+#hint{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);font:12px Inter;color:var(--dim);z-index:20;transition:opacity 1s}
+aside{display:none}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
+</head>
+<body>
+<div id="bgfx"></div>
+<div id="bar"></div>
+<div id="viewport"><div id="stage">
+
+<!-- 1 COVER -->
+<section class="slide" data-scene="cover">
+  <div class="three" style="position:absolute;inset:0;border-radius:0;z-index:-1;opacity:.95"></div>
+  <div style="flex:1"></div>
+  <p class="eyebrow a" style="--i:0">Real-time embedded systems</p>
+  <h1 class="a" style="--i:1;max-width:1000px">CAN: the network<br><span class="grad">that never collides</span></h1>
+  <p class="lead a" style="--i:2;max-width:820px">How two wires let many electronic control units share one bus, and how we can <b>prove</b> every message arrives on time.</p>
+  <p class="src a" style="--i:3">[Presenter name] · [Course] · [Date]  ·  press → to begin, N for notes, F for fullscreen</p>
+  <aside>Open with a question: how many computers do you think are talking inside a modern car right now? Let the room guess. Whatever the number, most of them share the same pair of wires, and they never collide. Today we find out how, bit by bit, and how engineers prove the timing.</aside>
+</section>
+
+<!-- 2 HISTORY -->
+<section class="slide">
+  <div><p class="eyebrow a" style="--i:0">01 · Origins</p><h2 class="a" style="--i:1">Four decades, three generations</h2></div>
+  <div class="row">
+    <div class="glass card a" style="--i:2"><p class="num">1983</p><p class="body">Robert Bosch GmbH starts developing CAN</p></div>
+    <div class="glass card a" style="--i:3"><p class="num">1986</p><p class="body">Presented at the SAE Congress</p></div>
+    <div class="glass card a" style="--i:4"><p class="num">1991</p><p class="body">First series car: Mercedes S-Class. Bosch publishes CAN 2.0</p></div>
+    <div class="glass card a" style="--i:5"><p class="num">1993</p><p class="body">First ISO standard: ISO 11898</p></div>
+  </div>
+  <div class="row">
+    <div class="glass card a" style="--i:6"><p class="num warm" style="color:var(--or)">2012</p><p class="body">Bosch introduces CAN FD (13th iCC)</p></div>
+    <div class="glass card a" style="--i:7"><p class="num" style="color:var(--or)">2015</p><p class="body">CAN FD in ISO 11898-1:2015</p></div>
+    <div class="glass card a" style="--i:8"><p class="num" style="color:var(--or)">2024</p><p class="body">CAN XL in ISO 11898-1:2024</p></div>
+  </div>
+  <p class="src">Davis et al., Real-Time Systems 35(3), 2007, §1.1 · Bosch CAN Spec. 2.0 (1991) · Hartwich, iCC 2012 · CiA, CAN XL</p>
+  <aside>Before CAN, cars used point-to-point wiring: a dedicated wire for every connection. CAN replaced that harness with one shared bus. Bosch started in 1983, presented it to the SAE in 1986, and Mercedes put it in the 1991 S-Class. ISO standardised it in 1993. The second row is the modern story.</aside>
+</section>
+
+<!-- 3 BIG IDEA -->
+<section class="slide accentS" style="justify-content:center">
+  <div class="accent-bg"></div>
+  <p class="eyebrow a" style="--i:0">The big idea</p>
+  <p class="big a" style="--i:1;max-width:1300px">A CAN frame has no destination address. Its identifier says <i>what</i> it carries and <i>how urgent</i> it is.</p>
+  <p class="lead a" style="--i:2;max-width:1100px">Every node hears every frame, and its acceptance filter decides what to keep. The identifier also sets the frame’s priority on the bus.</p>
+  <p class="src">Bosch CAN Specification 2.0 (1991), Part B, “Basic Concepts”</p>
+  <aside>The one sentence to remember. Ethernet asks “who is this for?” CAN asks “what is this, and how important is it?” You can add a node that listens to engine speed without changing anyone else. And because the identifier is the priority, arbitration comes for free.</aside>
+</section>
+
+<!-- 4 PHYSICAL (3D voltage) -->
+<section class="slide" data-scene="volt">
+  <div><p class="eyebrow a" style="--i:0">02 · Physical layer (ISO 11898-2)</p><h2 class="a" style="--i:1">Dominant beats recessive</h2></div>
+  <div class="split">
+    <div class="col">
+      <table class="a" style="--i:2">
+        <tr><th>State</th><th>Logic</th><th>CAN_H</th><th>CAN_L</th><th>V<sub>diff</sub></th></tr>
+        <tr><td>Recessive</td><td>1</td><td>≈ 2.5 V</td><td>≈ 2.5 V</td><td>≈ 0 V (&lt; 0.5 V)</td></tr>
+        <tr><td>Dominant</td><td>0</td><td>≈ 3.5 V</td><td>≈ 1.5 V</td><td>≈ 2 V (&gt; 0.9 V)</td></tr>
+      </table>
+      <div class="glass card a" style="--i:3;flex:none"><h3>Wired-AND</h3><p class="body">One dominant transmitter overrides any number of recessive ones. Arbitration is built on this.</p></div>
+      <div class="glass card a" style="--i:4;flex:none"><h3>Watch the 3D model</h3><p class="body">Noise moves <span class="hl">CAN_H</span> and <span class="warm">CAN_L</span> together. Their difference (<span class="ok">green</span>) stays rock-steady.</p></div>
+    </div>
+    <div class="three glass a" style="--i:3"><div class="ov">common-mode noise on · V<sub>diff</sub> unchanged</div></div>
+  </div>
+  <p class="src">CiA, “CAN HS transmission” · ISO 11898-2 · Bosch CAN Spec. 2.0, “Bus Values”</p>
+  <aside>Recessive: nobody drives, both lines rest near 2.5 V. Dominant: CAN_H goes to about 3.5 V and CAN_L to about 1.5 V. Receivers only read the difference. In the model, the two lines bounce together because of noise, but the green difference line never moves. That is why CAN uses a differential twisted pair.</aside>
+</section>
+
+<!-- 5 TOPOLOGY (3D bus) -->
+<section class="slide" data-scene="bus">
+  <div><p class="eyebrow a" style="--i:0">02 · Topology</p><h2 class="a" style="--i:1">One line, terminated at both ends</h2></div>
+  <div class="three glass a" style="--i:2"><div class="ov">ECUs transmit at random · pulses travel both ways · 120 Ω at each end</div></div>
+  <p class="body a" style="--i:3;max-width:1300px">Each node is a microcontroller with a CAN controller (framing, arbitration, errors) and a transceiver (voltages). The 120 Ω resistors match the cable impedance to stop reflections, and they pull the idle bus back to recessive.</p>
+  <p class="src">ISO 11898-2 · CiA, “CAN HS transmission” · TI SLOA101B</p>
+  <aside>Why not terminate inside every node? If that node is unplugged, the bus loses its termination. ISO 11898 puts one resistor at each end of the line. Keep the stubs short, because long stubs cause reflections at high bit rates.</aside>
+</section>
+
+<!-- 6 FRAME (3D blocks) -->
+<section class="slide" data-scene="frame">
+  <div><p class="eyebrow a" style="--i:0">03 · Data link layer</p><h2 class="a" style="--i:1">Anatomy of a data frame (11-bit ID)</h2></div>
+  <div class="three glass a" style="--i:2;flex:1.2"></div>
+  <div class="row">
+    <div class="glass card a" style="--i:3"><h3>Arbitration field</h3><p class="body">11-bit identifier + RTR (dominant = data frame, recessive = remote frame).</p></div>
+    <div class="glass card a" style="--i:4"><h3>Control + data</h3><p class="body">IDE dominant marks the standard format. The 4-bit DLC gives 0–8 data bytes, sent MSB first.</p></div>
+    <div class="glass card a" style="--i:5"><h3>Check + close</h3><p class="body">15-bit CRC, an ACK slot filled in by receivers, 7 recessive EOF bits, then 3 intermission bits.</p></div>
+  </div>
+  <p class="src">Bosch CAN Specification 2.0 (1991), Part B, “Message Transfer”. Block widths follow bit counts (stuff bits not shown).</p>
+  <aside>SOF is one dominant bit that hard-synchronises everyone. The CRC polynomial is x^15+x^14+x^10+x^8+x^7+x^4+x^3+1. The transmitter sends the ACK slot recessive, and any receiver that got the frame correctly overwrites it with dominant. Without stuff bits, an 8-byte standard frame is 111 bits including the intermission.</aside>
+</section>
+
+<!-- 7 ARBITRATION (3D cubes) -->
+<section class="slide" data-scene="arb">
+  <div><p class="eyebrow a" style="--i:0">03 · Medium access</p><h2 class="a" style="--i:1">Bitwise arbitration: the lowest ID wins</h2></div>
+  <div class="split" style="grid-template-columns:1.35fr 1fr">
+    <div class="three glass a" style="--i:2"><div class="ov" id="arbOv">SOF · ID10 → ID0 · RTR</div></div>
+    <div class="col">
+      <div class="glass card a" style="--i:3;flex:none"><h3>The rule</h3><p class="body">Every transmitter reads back each bit. If it sent recessive (1) and reads dominant (0), it has lost. It stops at once and becomes a receiver.</p></div>
+      <div class="glass card a" style="--i:4;flex:none"><h3>Non-destructive</h3><p class="body">0x123 drops at ID8 and 0x067 at ID1. 0x065’s frame is never corrupted, so no bus time is lost.</p></div>
+      <div class="glass card a" style="--i:5;flex:none"><h3>Tie-breakers</h3><p class="body">Same ID: a data frame beats a remote frame. Same base ID: a standard frame beats an extended one.</p></div>
+    </div>
+  </div>
+  <p class="src">Bosch CAN Specification 2.0 (1991), Part B, “Basic Concepts” and “Message Transfer”</p>
+  <aside>Tall cyan cubes are dominant 0s and low dim cubes are recessive 1s. Watch the orange cube: a node that sent recessive while the bus was dominant. Its row fades out, and it becomes a receiver. Act it out with three volunteers first, then show this.</aside>
+</section>
+
+<!-- 8 STUFFING -->
+<section class="slide">
+  <div><p class="eyebrow a" style="--i:0">04 · Error detection</p><h2 class="a" style="--i:1">Bit stuffing and five error checks</h2></div>
+  <div class="split">
+    <div class="col">
+      <div class="code a" style="--i:2">Frame bits:  0 0 0 0 0 0 0 1
+On the bus:  0 0 0 0 0 <span class="warm">1</span> 0 0 1</div>
+      <p class="body a" style="--i:3">After <b>five identical bits</b>, the transmitter inserts one opposite bit, and receivers remove it. This guarantees edges for resynchronisation. Stuffing covers SOF through the CRC sequence.</p>
+      <p class="body a" style="--i:4">Residual risk of an undetected corrupted message: below <span class="hl">message error rate × 4.7·10⁻¹¹</span>.</p>
+    </div>
+    <table class="a" style="--i:3">
+      <tr><th>Error</th><th>Detected when …</th></tr>
+      <tr><td class="hl">Bit</td><td>A transmitter reads back a different bit (except during arbitration and in the ACK slot)</td></tr>
+      <tr><td class="hl">Stuff</td><td>6 equal bits in a row in a stuffed field</td></tr>
+      <tr><td class="hl">CRC</td><td>The computed CRC differs from the received one</td></tr>
+      <tr><td class="hl">Form</td><td>A fixed-form field holds an illegal bit</td></tr>
+      <tr><td class="hl">ACK</td><td>The transmitter sees no dominant ACK slot</td></tr>
+    </table>
+  </div>
+  <p class="src">Bosch CAN Specification 2.0 (1991), Part B, “Bit Stream Coding” and “Error Handling”</p>
+  <aside>Stuffing gives the receivers edges to keep their clocks in step, and it turns six equal bits into an alarm. That is why the active error flag is six dominant bits: it deliberately breaks the rule so every node notices. The frame is destroyed for everyone and retransmitted automatically.</aside>
+</section>
+
+<!-- 9 FAULTS (3D state machine) -->
+<section class="slide" data-scene="faults">
+  <div><p class="eyebrow a" style="--i:0">04 · Fault confinement</p><h2 class="a" style="--i:1">A faulty node removes itself</h2></div>
+  <div class="split" style="grid-template-columns:1.3fr 1fr">
+    <div class="three glass a" style="--i:2"><div class="ov" id="tecOv">TEC = 0</div></div>
+    <table class="a" style="--i:3">
+      <tr><th>State</th><th>Condition</th></tr>
+      <tr><td class="ok">Error-active</td><td>TEC ≤ 127 and REC ≤ 127. Signals errors with 6 dominant bits</td></tr>
+      <tr><td class="warm">Error-passive</td><td>TEC or REC ≥ 128. Signals with 6 recessive bits and waits 8 extra bits after transmitting</td></tr>
+      <tr><td class="bad">Bus-off</td><td>TEC ≥ 256. Takes no part in bus activity. Rejoins after 128 × 11 recessive bits, with counters reset</td></tr>
+      <tr><td>Counters</td><td>TX error +8 · RX error +1 · success −1</td></tr>
+    </table>
+  </div>
+  <p class="src">Bosch CAN Specification 2.0 (1991), Part B, “Fault Confinement”</p>
+  <aside>The model replays a broken transmitter. Every error adds 8 to TEC. After 16 errors it reaches 128 and turns error-passive. After 32 it reaches 256 and goes bus-off, and the rest of the bus keeps running. Then it waits for 128 × 11 recessive bits and comes back with fresh counters.</aside>
+</section>
+
+<!-- 10 TIMING (3D bit) -->
+<section class="slide" data-scene="timing">
+  <div><p class="eyebrow a" style="--i:0">05 · Bit timing</p><h2 class="a" style="--i:1">Inside one bit: 16 time quanta</h2></div>
+  <div class="three glass a" style="--i:2"><div class="ov">SYNC 1 · PROP 7 · PHASE_SEG1 6 · PHASE_SEG2 2 → sample point 87.5 %</div></div>
+  <div class="row">
+    <div class="glass card a" style="--i:3"><h3>Hard sync</h3><p class="body">At SOF, the recessive-to-dominant edge restarts every node’s bit timing.</p></div>
+    <div class="glass card a" style="--i:4"><h3>Resync</h3><p class="body">Later edges lengthen PHASE_SEG1 or shorten PHASE_SEG2 by up to SJW (1–4 TQ).</p></div>
+    <div class="glass card a" style="--i:5"><h3>Distance limit</h3><p class="body">PROP_SEG must cover the round-trip delay. Longer bus, lower bit rate.</p></div>
+  </div>
+  <p class="src">Bosch CAN Spec. 2.0, Part B, “Bit Timing Requirements” · ISO 11898-1 (Phase_Seg2 programmable on its own, minimum range 2–8 TQ)</p>
+  <aside>The laser sweeping across the bit is the node’s clock. The flash is the sample point at 87.5 %. Bosch 1991 tied PHASE_SEG2 to PHASE_SEG1; ISO 11898-1 lets it be set on its own, which makes late sample points like 87.5 % possible.</aside>
+</section>
+
+<!-- 11 REALTIME -->
+<section class="slide">
+  <div><p class="eyebrow a" style="--i:0">06 · Real-time</p><h2 class="a" style="--i:1">CAN is fixed-priority, non-preemptive scheduling</h2></div>
+  <div class="code a" style="--i:2">C<sub>m</sub> = ( g + 8·s<sub>m</sub> + 13 + ⌊(g + 8·s<sub>m</sub> − 1) / 4⌋ ) · τ<sub>bit</sub>      <span style="color:var(--dim)">g = 34 (11-bit) · 54 (29-bit)</span></div>
+  <div class="row">
+    <div class="glass card a" style="--i:3"><p class="num" data-count="135">135</p><p class="body">bits: worst-case 8-byte frame, 11-bit ID, including stuff bits and the 3-bit intermission</p></div>
+    <div class="glass card a" style="--i:4"><p class="num" data-count="160">160</p><p class="body">bits: the same frame with a 29-bit ID</p></div>
+    <div class="glass card a" style="--i:5"><p class="num" style="color:var(--or)"><span data-count="270">270</span> µs</p><p class="body">to send 135 bits at 500 kbit/s (2 µs per bit)</p></div>
+  </div>
+  <p class="src">Davis, Burns, Bril, Lukkien, Real-Time Systems 35(3):239–272, 2007, Eqs. 1–2</p>
+  <aside>Messages are the tasks, the identifier is the fixed priority, and the bus is a single processor. A frame can’t be interrupted once it starts, so a high-priority message can be blocked by at most one lower-priority frame. Check the formula live: 34 + 64 + 13 + 24 = 135.</aside>
+</section>
+
+<!-- 12 RTA -->
+<section class="slide">
+  <div><p class="eyebrow a" style="--i:0">06 · Response-time analysis</p><h2 class="a" style="--i:1">Worst-case response time, revised (2007)</h2></div>
+  <div class="code a" style="--i:2"><span class="hl">B_m</span>    = max over lower-priority k of C_k
+<span class="hl">t_m</span>    = B_m + Σ<sub>k∈hep(m)</sub> ⌈(t_m + J_k) / T_k⌉ · C_k
+<span class="hl">Q_m</span>    = ⌈(t_m + J_m) / T_m⌉
+<span class="hl">w_m(q)</span> = B_m + q·C_m + Σ<sub>k∈hp(m)</sub> ⌈(w_m(q) + J_k + τ_bit) / T_k⌉ · C_k
+<span class="hl">R_m</span>    = max<sub>q=0…Q_m−1</sub> ( J_m + w_m(q) − q·T_m + C_m )</div>
+  <div class="row">
+    <div class="glass card a" style="--i:3"><h3>Blocking B</h3><p class="body">One lower-priority frame may already be on the bus.</p></div>
+    <div class="glass card a" style="--i:4"><h3>Busy period t</h3><p class="body">Check every instance of m in the busy period, not just the first.</p></div>
+    <div class="glass card a" style="--i:5"><h3>Interference w</h3><p class="body">Higher-priority frames that win arbitration first.</p></div>
+  </div>
+  <p class="src">Davis et al. 2007, Eqs. 5, 8, 10, 11, 13 (T = period, J = queuing jitter, hp/hep = higher / higher-or-equal priority)</p>
+  <aside>Solve by fixed-point iteration: start small and repeat until the value stops changing. The key 2007 change is the busy period and the loop over instances q. The next slide shows why it matters.</aside>
+</section>
+
+<!-- 13 FLAW (animated gantt) -->
+<section class="slide">
+  <div><p class="eyebrow a" style="--i:0">06 · A lesson from research</p><h2 class="a" style="--i:1">The 1994 analysis was optimistic</h2></div>
+  <p class="lead a" style="--i:2;max-width:1350px">A, B and C each take 1 ms. A repeats every 2.5 ms. B and C repeat every 3.5 ms, with a 3.25 ms deadline. All three are released at t = 0.</p>
+  <div class="glass a" style="--i:3;padding:46px 30px 40px">
+    <div class="gantt" id="gantt"></div>
+  </div>
+  <div class="row">
+    <div class="glass card a" style="--i:4"><p class="num">3.0 ms</p><p class="body">Original analysis (first instance only): looks safe</p></div>
+    <div class="glass card a" style="--i:5"><p class="num" style="color:var(--or)">3.5 ms</p><p class="body">True worst case: C’s second instance, released at 3.5, ends at 7.0</p></div>
+    <div class="glass card a" style="--i:6"><p class="num" style="color:var(--rd)">&gt; 3.25 ms</p><p class="body">Deadline missed. Also: deadline-monotonic isn’t optimal for CAN; Audsley’s OPA is</p></div>
+  </div>
+  <p class="src">Davis, Burns, Bril, Lukkien, Real-Time Systems 35(3):239–272, 2007 (doi:10.1007/s11241-007-9012-7)</p>
+  <aside>Watch the timeline build. C’s first instance finishes at 3 ms, inside its deadline. But C’s second copy is released at 3.5 while the bus is still busy. A and B go first, and C ends at 7.0: a 3.5 ms response against a 3.25 ms deadline. The 1994 analysis only checked the first instance. Science corrects itself.</aside>
+</section>
+
+<!-- 14 EVOLUTION (3D bars) -->
+<section class="slide" data-scene="gens">
+  <div><p class="eyebrow a" style="--i:0">07 · Evolution</p><h2 class="a" style="--i:1">Classical CAN → CAN FD → CAN XL</h2></div>
+  <div class="split" style="grid-template-columns:1fr 1.25fr">
+    <div class="three glass a" style="--i:2"><div class="ov">max data field per frame · log₂ height</div></div>
+    <table class="a" style="--i:3;font-size:18px">
+      <tr><th></th><th>Classical</th><th>CAN FD</th><th>CAN XL</th></tr>
+      <tr><td>Standard</td><td>Bosch 2.0; ISO 11898 (1993)</td><td>ISO 11898-1:2015</td><td>ISO 11898-1:2024</td></tr>
+      <tr><td>Data field</td><td>0–8 B</td><td>0–64 B</td><td>1–2048 B</td></tr>
+      <tr><td>Bit rate</td><td>≤ 1 Mbit/s</td><td>Fast data phase, up to 8 Mbit/s</td><td>Data phase up to 20 Mbit/s</td></tr>
+      <tr><td>CRC</td><td>15 bit</td><td>17 / 21 bit + stuff count</td><td>Two CRCs</td></tr>
+      <tr><td>New bits</td><td>—</td><td>FDF, BRS, ESI</td><td>Priority ID + 32-bit acceptance field</td></tr>
+    </table>
+  </div>
+  <p class="src">Hartwich, “CAN with Flexible Data-Rate”, iCC 2012 · ISO 11898-1:2015 · CiA, “CAN XL”; CiA brochure “CAN 1986 to 2021”</p>
+  <aside>Arbitration still runs slowly enough that every node agrees on each bit. The trick is to speed up only after arbitration is won: that is the BRS bit. CAN XL separates priority from addressing.</aside>
+</section>
+
+<!-- 15 TRY IT (QR) -->
+<section class="slide" data-scene="cover2">
+  <div class="three" style="position:absolute;inset:0;border-radius:0;z-index:-1;opacity:.3"></div>
+  <div><p class="eyebrow a" style="--i:0">Your turn</p><h2 class="a" style="--i:1">Scan, then break things on purpose</h2></div>
+  <div class="row" style="align-items:center;gap:60px;flex:1">
+    <div class="a" style="--i:2;background:#fff;padding:22px;border-radius:26px;box-shadow:0 0 0 1px var(--line),0 20px 80px rgba(94,231,255,.35)">
+      <img src="data:image/png;base64,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" alt="QR code linking to flutteringgamer.github.io/can-lab" style="width:330px;height:330px;display:block;image-rendering:pixelated">
+    </div>
+    <div class="col" style="flex:1">
+      <p class="mono a" style="--i:3;font-size:30px;color:var(--cy)">flutteringgamer.github.io/can-lab</p>
+      <div class="glass card a" style="--i:4;flex:none"><h3>CAN·Lab</h3><p class="body">3D bus, voltage scope, frame builder with live CRC and stuffing, arbitration lab, error counters, bit-timing calculator, response-time analyser.</p></div>
+      <div class="glass card a" style="--i:5;flex:none"><h3>Challenge</h3><p class="body">Load the sample set at 125 kbit/s. Add 8-byte messages until one misses its deadline. Can you rescue it by changing priorities only?</p></div>
+      <div class="glass card a" style="--i:6;flex:none"><h3>Kahoot</h3><p class="body">Three quizzes, 42 questions: fundamentals · frames and errors · timing, real-time, FD and XL.</p></div>
+    </div>
+  </div>
+  <aside>Give students two minutes to scan and open the site. Run Kahoot 3 after the challenge. Ask them to explain each result with the B, t and w terms.</aside>
+</section>
+
+<!-- 16 TAKEAWAYS -->
+<section class="slide accentS" style="justify-content:center;gap:34px">
+  <div class="accent-bg"></div>
+  <p class="eyebrow a" style="--i:0">Three things to remember</p>
+  <p class="big a" style="--i:1;font-size:54px">1 · The identifier is the priority. Arbitration never wastes a bit.</p>
+  <p class="big a" style="--i:2;font-size:54px">2 · Errors are detected globally and confined locally.</p>
+  <p class="big a" style="--i:3;font-size:54px">3 · Timing is provable, but only with correct analysis.</p>
+  <p class="src">Bosch CAN 2.0 (1991) · Davis et al. (2007)</p>
+  <aside>Close the loop with the opening question. Arbitration explains “no collisions”, fault confinement explains robustness, and response-time analysis explains why we trust CAN with brakes and airbags. End on: “Prove it.”</aside>
+</section>
+
+<!-- 17 REFERENCES -->
+<section class="slide">
+  <div><p class="eyebrow a" style="--i:0">Evidence base</p><h2 class="a" style="--i:1">References</h2></div>
+  <ol class="body a" style="--i:2;font-size:19px;line-height:1.6;padding-left:26px;margin:0;display:flex;flex-direction:column;gap:6px">
+    <li>Robert Bosch GmbH (1991). CAN Specification Version 2.0, Parts A and B. Stuttgart.</li>
+    <li>ISO 11898-1:2015 and ISO 11898-1:2024, Road vehicles: Controller area network, Part 1. ISO 11898-2: High-speed physical medium attachment.</li>
+    <li>Tindell, K., Burns, A., Wellings, A. J. (1994). Calculating Controller Area Network (CAN) message response times. Proc. IFAC DCCS’94, pp. 35–40.</li>
+    <li>Davis, R. I., Burns, A., Bril, R. J., Lukkien, J. J. (2007). CAN schedulability analysis: refuted, revisited and revised. Real-Time Systems 35(3):239–272.</li>
+    <li>Hartwich, F. (2012). CAN with Flexible Data-Rate. 13th international CAN Conference (iCC).</li>
+    <li>Hartwich, F. (2013). Bit Time Requirements for CAN FD. 14th iCC.</li>
+    <li>Audsley, N. C. (2001). On priority assignment in fixed priority scheduling. Information Processing Letters 79(1):39–44.</li>
+    <li>CAN in Automation (CiA). CAN HS transmission; CAN XL; CiA 610-1. can-cia.org.</li>
+  </ol>
+  <aside>Davis et al. (2007) is open access: a model of research correcting itself.</aside>
+</section>
+
+</div></div>
+
+<div id="notes"></div>
+<div id="hint">← → or click to navigate · N notes · F fullscreen</div>
+<div id="ui">
+  <a href="../" title="Open CAN·Lab">CAN·Lab ↗</a>
+  <button id="prev" aria-label="Previous slide">←</button>
+  <span id="count"></span>
+  <button id="next" aria-label="Next slide">→</button>
+  <button id="nbtn">Notes</button>
+  <button id="fbtn">⛶</button>
+</div>
+
+<script>
+/* ---------- deck navigation ---------- */
+const slides=[...document.querySelectorAll('.slide')];
+let cur=0;
+const stage=document.getElementById('stage');
+function fit(){const s=Math.min(innerWidth/1600,innerHeight/900);stage.style.transform=`scale(${s})`}
+addEventListener('resize',fit);fit();
+function go(n,fromHash){
+  n=Math.max(0,Math.min(slides.length-1,n));
+  slides.forEach((s,i)=>{s.classList.toggle('active',i===n);s.classList.toggle('past',i<n)});
+  cur=n;
+  document.getElementById('count').textContent=(n+1)+' / '+slides.length;
+  document.getElementById('bar').style.width=((n+1)/slides.length*100)+'%';
+  const aside=slides[n].querySelector('aside');document.getElementById('notes').textContent=aside?aside.textContent:'';
+  if(!fromHash){try{history.replaceState(null,'','#'+(n+1))}catch(e){location.hash=String(n+1)}}
+  slides[n].querySelectorAll('[data-count]').forEach(countUp);
+  if(n===12) buildGantt();
+  window.dispatchEvent(new CustomEvent('slidechange',{detail:{slide:slides[n]}}));
+}
+function countUp(el){const t=+el.dataset.count,t0=performance.now();const f=now=>{const k=Math.min(1,(now-t0-500)/900);el.textContent=Math.round(t*(k<0?0:1-Math.pow(1-k,3)));if(k<1)requestAnimationFrame(f)};requestAnimationFrame(f)}
+addEventListener('keydown',e=>{
+  if(['ArrowRight','PageDown',' ','Enter'].includes(e.key)){e.preventDefault();go(cur+1)}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();go(cur-1)}
+  else if(e.key==='Home')go(0);else if(e.key==='End')go(slides.length-1);
+  else if(e.key==='n'||e.key==='N')document.getElementById('notes').classList.toggle('on');
+  else if(e.key==='f'||e.key==='F')fs();
+});
+function fs(){try{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()}catch(e){}}
+document.getElementById('prev').onclick=()=>go(cur-1);
+document.getElementById('next').onclick=()=>go(cur+1);
+document.getElementById('nbtn').onclick=()=>document.getElementById('notes').classList.toggle('on');
+document.getElementById('fbtn').onclick=fs;
+document.getElementById('viewport').addEventListener('click',e=>{if(e.target.closest('a,button,#ui'))return;go(e.clientX>innerWidth*0.33?cur+1:cur-1)});
+let tx=null;addEventListener('touchstart',e=>tx=e.touches[0].clientX,{passive:true});
+addEventListener('touchend',e=>{if(tx==null)return;const d=e.changedTouches[0].clientX-tx;if(Math.abs(d)>50)go(cur+(d<0?1:-1));tx=null});
+addEventListener('hashchange',()=>{const n=parseInt(location.hash.slice(1))-1;if(!isNaN(n)&&n!==cur)go(n,true)});
+setTimeout(()=>document.getElementById('hint').style.opacity=0,5000);
+go((parseInt(location.hash.slice(1))||1)-1,true);
+
+/* ---------- gantt for the Davis counterexample ---------- */
+function buildGantt(){
+  const g=document.getElementById('gantt');const T=7.5;const X=v=>`calc(${v/T*100}% )`;
+  const jobs=[['A',0,1,'#5ee7ff'],['B',1,2,'#9b8cff'],['C',2,3,'#6dffb1'],['A',3,4,'#5ee7ff'],['B',4,5,'#9b8cff'],['A',5,6,'#5ee7ff'],['C',6,7,'#ffb25e']];
+  const lanes={A:0,B:1,C:2};
+  let h='';['A','B','C'].forEach((n,i)=>{h+=`<div class="lab" style="top:${i*62}px">${n}</div><div class="lane" style="top:${i*62}px">`;
+    jobs.forEach(([m,s,e,c],j)=>{if(m===n)h+=`<div class="bar" style="left:${s/T*100}%;width:${(e-s)/T*100}%;background:${c};--t:${j}">${m}${n==='C'&&s>=6?'₂':(n==='C'?'₁':'')}</div>`});
+    if(i===2){h+=`<div class="mark" style="left:${3.5/T*100}%;border-color:#a9b6cf"><span class="mtxt" style="color:#a9b6cf">C₂ released 3.5</span></div>`;
+      h+=`<div class="mark" style="left:${6.75/T*100}%;border-color:#ff6b7d"><span class="mtxt" style="color:#ff6b7d;top:48px">deadline 6.75</span></div>`}
+    h+='</div>'});
+  h+='<div class="lane" style="top:186px;border:none">';for(let t=0;t<=7;t++)h+=`<span class="tick" style="left:${t/T*100}%">${t} ms</span>`;h+='</div>';
+  g.innerHTML=h;
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(2, devicePixelRatio));
+renderer.setClearColor(0x000000, 0);
+const CY = 0x5ee7ff, OR = 0xffb25e, GR = 0x6dffb1, RD = 0xff6b7d, VI = 0x9b8cff;
+
+function label(text, color = '#eef3fb', h = 0.5) {
+  const c = document.createElement('canvas'); const x = c.getContext('2d');
+  x.font = '600 56px "JetBrains Mono", monospace';
+  const w = Math.ceil(x.measureText(text).width) + 24; c.width = w; c.height = 80;
+  x.font = '600 56px "JetBrains Mono", monospace'; x.fillStyle = color; x.textBaseline = 'middle'; x.fillText(text, 12, 42);
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false }));
+  s.scale.set(h * w / 80, h, 1); return s;
+}
+function lights(scene) {
+  scene.add(new THREE.AmbientLight(0x8899ff, 0.7));
+  const d = new THREE.DirectionalLight(0xffffff, 1.3); d.position.set(5, 9, 7); scene.add(d);
+  const p1 = new THREE.PointLight(CY, 40, 30); p1.position.set(-6, 4, 4); scene.add(p1);
+  const p2 = new THREE.PointLight(VI, 40, 30); p2.position.set(6, 3, -3); scene.add(p2);
+}
+function helix(scene, L, phase, color, r = 0.13, tube = 0.06) {
+  const pts = []; for (let i = 0; i <= 300; i++) { const x = -L + i / 300 * 2 * L; const a = x * 3 + phase; pts.push(new THREE.Vector3(x, Math.sin(a) * r, Math.cos(a) * r)); }
+  const m = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 600, tube, 8, false),
+    new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.4, metalness: 0.3, roughness: 0.35 }));
+  scene.add(m); return m;
+}
+const ease = t => 1 - Math.pow(1 - Math.min(1, Math.max(0, t)), 3);
+
+/* ---------------- scene builders ---------------- */
+const builders = {
+  cover() {
+    const s = new THREE.Scene(); lights(s);
+    const cam = new THREE.PerspectiveCamera(40, 1, 0.1, 100); cam.position.set(2, 1.6, 9);
+    const g = new THREE.Group(); s.add(g); g.position.set(4.2, 1.9, -2);
+    const L = 12; const a = helix(g, L, 0, CY), b = helix(g, L, Math.PI, OR);
+    g.remove(a); g.remove(b); const tw = new THREE.Group(); tw.add(a, b); g.add(tw);
+    const pulses = []; const pg = new THREE.SphereGeometry(0.09, 12, 12);
+    for (let i = 0; i < 40; i++) { const m = new THREE.Mesh(pg, new THREE.MeshBasicMaterial({ color: Math.random() < .5 ? CY : 0xffffff, transparent: true })); m.userData.o = Math.random() * 24; g.add(m); pulses.push(m); }
+    const dots = new THREE.Points(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(Array.from({ length: 900 }, () => (Math.random() - .5) * 30), 3)),
+      new THREE.PointsMaterial({ color: 0x8fb4ff, size: 0.03, transparent: true, opacity: .6 })); s.add(dots);
+    g.rotation.z = 0.22; g.rotation.y = -0.45;
+    return { s, cam, update(t) { tw.rotation.x = t * 0.25; pulses.forEach(p => { const x = ((p.userData.o + t * 4) % 24) - 12; p.position.set(x, Math.sin(t * 3 + p.userData.o) * 0.02, 0); p.material.opacity = 1 - Math.abs(x) / 12; }); dots.rotation.y = t * 0.02; cam.position.x = 2 + Math.sin(t * 0.2) * 0.6; cam.lookAt(1.5, 0, 0); } };
+  },
+  cover2() { const o = builders.cover(); return o; },
+
+  volt() {
+    const s = new THREE.Scene(); lights(s);
+    const cam = new THREE.PerspectiveCamera(38, 1, 0.1, 100); cam.position.set(-0.6, 1.4, 16.5);
+    const bits = [1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0, 1]; const W = 0.85, x0 = -bits.length * W / 2;
+    const mk = (fn, color) => { const pts = []; bits.forEach((b, i) => { pts.push(new THREE.Vector3(x0 + i * W + 0.02, fn(b), 0), new THREE.Vector3(x0 + (i + 1) * W - 0.02, fn(b), 0)); });
+      const path = new THREE.CurvePath(); for (let i = 0; i < pts.length - 1; i++) path.add(new THREE.LineCurve3(pts[i], pts[i + 1]));
+      return new THREE.Mesh(new THREE.TubeGeometry(path, 400, 0.06, 8, false), new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: .6 })); };
+    const k = 0.9;
+    const pair = new THREE.Group(); s.add(pair);
+    const H = mk(b => (b ? 2.5 : 3.5) * k - 1.2, CY), Lw = mk(b => (b ? 2.5 : 1.5) * k - 1.2, OR); pair.add(H, Lw);
+    const lh = label('CAN_H', '#5ee7ff', 0.42); lh.position.set(x0 - 0.9, 3.5 * k - 1.2, 0); pair.add(lh);
+    const ll = label('CAN_L', '#ffb25e', 0.42); ll.position.set(x0 - 0.9, 1.5 * k - 1.2, 0); pair.add(ll);
+    const D = mk(b => (b ? 0 : 2) * 0.55 - 3.3, GR); s.add(D);
+    const ld = label('V_diff', '#6dffb1', 0.42); ld.position.set(x0 - 0.9, -2.75, 0); s.add(ld);
+    bits.forEach((b, i) => { const t = label(b ? 'R' : 'D', b ? '#6f7d99' : '#eef3fb', 0.36); t.position.set(x0 + (i + .5) * W, 3.0, 0); s.add(t); });
+    const plane = new THREE.Mesh(new THREE.PlaneGeometry(bits.length * W, 6.6), new THREE.MeshBasicMaterial({ color: 0x5ee7ff, transparent: true, opacity: 0.025 })); plane.position.set(0, 0, -0.3); s.add(plane);
+    return { s, cam, update(t) { pair.position.y = Math.sin(t * 2.1) * 0.35 + Math.sin(t * 5.3) * 0.12; s.rotation.y = Math.sin(t * 0.35) * 0.18; cam.lookAt(-0.6, 0, 0); } };
+  },
+
+  bus() {
+    const s = new THREE.Scene(); lights(s); s.fog = new THREE.Fog(0x060a14, 16, 34);
+    const cam = new THREE.PerspectiveCamera(36, 1, 0.1, 100);
+    const grid = new THREE.GridHelper(40, 40, 0x223355, 0x111a2e); grid.position.y = -1.6; s.add(grid);
+    const L = 8; helix(s, L, 0, CY); helix(s, L, Math.PI, OR);
+    [-L - 0.4, L + 0.4].forEach(x => { const r = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.7, 24), new THREE.MeshStandardMaterial({ color: 0xd8c39a }));
+      r.rotation.x = Math.PI / 2; r.position.x = x; s.add(r); const l = label('120 Ω', '#ffc861', 0.42); l.position.set(x, 0.7, 0); s.add(l); });
+    const E = [['Airbag', 0x050, -5.6, -2.4], ['Engine', 0x0A0, -2.2, 2.4], ['Brakes', 0x0C8, 1, -2.4], ['Body', 0x2F0, 4.2, 2.4], ['Dash', 0x3E8, 6.4, -2.4]];
+    const ecus = E.map(([n, id, x, z]) => { const g = new THREE.Group(); g.position.set(x, 0, z);
+      const mat = new THREE.MeshPhysicalMaterial({ color: 0x1b2a4a, roughness: .15, clearcoat: 1, emissive: CY, emissiveIntensity: .05 });
+      const b = new THREE.Mesh(new THREE.BoxGeometry(1.7, .85, 1.1), mat); b.position.y = .6; g.add(b);
+      const st = new THREE.Mesh(new THREE.CylinderGeometry(.035, .035, Math.abs(z), 8), new THREE.MeshStandardMaterial({ color: 0x9aa7c7 })); st.rotation.x = Math.PI / 2; st.position.z = -Math.sign(z) * Math.abs(z) / 2; g.add(st);
+      const l = label(`${n} 0x${id.toString(16).toUpperCase().padStart(3, '0')}`, '#eef3fb', .38); l.position.y = 1.5; g.add(l); s.add(g); return { g, mat, x }; });
+    const pulses = []; const pg = new THREE.SphereGeometry(.1, 12, 12); let next = 0;
+    return { s, cam, update(t, dt) {
+      if (t > next) { const e = ecus[Math.floor(Math.random() * ecus.length)]; e.mat.emissiveIntensity = .8; e.t = t;
+        for (let i = 0; i < 26; i++) for (const d of [-1, 1]) { const m = new THREE.Mesh(pg, new THREE.MeshBasicMaterial({ color: Math.random() < .5 ? CY : 0x41506e })); m.visible = false; s.add(m); pulses.push({ m, x: e.x, d, t0: t + i * .05 }); }
+        next = t + 2.2; }
+      ecus.forEach(e => { if (e.t && t - e.t > 1.4) e.mat.emissiveIntensity = .05; });
+      for (let i = pulses.length - 1; i >= 0; i--) { const p = pulses[i]; const age = t - p.t0; if (age < 0) continue; p.m.visible = true; const x = p.x + p.d * age * 7; p.m.position.set(x, 0, 0);
+        if (Math.abs(x) > L) { s.remove(p.m); p.m.material.dispose(); pulses.splice(i, 1); } }
+      cam.position.set(Math.sin(t * .15) * 6, 6.5, 12.5); cam.lookAt(0, 0, 0); } };
+  },
+
+  frame() {
+    const s = new THREE.Scene(); lights(s);
+    const cam = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
+    const F = [['SOF', 1, 0xffc861], ['ID', 11, CY], ['RTR', 1, VI], ['IDE', 1, 0x7fb2ff], ['r0', 1, 0x8c97b3], ['DLC', 4, 0xff9f6b], ['DATA', 64, GR], ['CRC', 15, 0xff8fda], ['del', 1, 0xc98ab4], ['ACK', 2, 0xffe08a], ['EOF', 7, 0x5c6e96], ['IFS', 3, 0x46557a]];
+    const scale = b => 0.55 + Math.sqrt(b) * 0.42; let x = 0; const blocks = [];
+    const total = F.reduce((a, [, b]) => a + scale(b) + 0.08, 0); x = -total / 2;
+    F.forEach(([n, b, c], i) => { const w = scale(b); const m = new THREE.Mesh(new THREE.BoxGeometry(w, 0.9, 0.9), new THREE.MeshPhysicalMaterial({ color: c, emissive: c, emissiveIntensity: .25, roughness: .25, clearcoat: 1 }));
+      const g = new THREE.Group(); g.add(m); const l = label(n, '#eef3fb', .36); l.position.y = 0.95; g.add(l); const bl = label(b === 64 ? '0-64 bits' : b + (b === 1 ? ' bit' : ' bits'), '#a9b6cf', .26); bl.position.y = -0.8; g.add(bl);
+      g.userData.x = x + w / 2; g.userData.i = i; s.add(g); blocks.push(g); x += w + 0.08; });
+    let t0 = null;
+    return { s, cam, reset() { t0 = null; }, update(t) { if (t0 === null) t0 = t; const k = t - t0;
+      blocks.forEach(g => { const e = ease((k - .3 - g.userData.i * .13) / .7); g.position.set(g.userData.x + (1 - e) * 14, Math.sin(t * 1.4 + g.userData.i * .6) * .06, 0); g.scale.setScalar(.3 + .7 * e); g.rotation.x = (1 - e) * 1.2; });
+      cam.position.set(Math.sin(t * .25) * 1.6, 2.4, 14); cam.lookAt(0, -.1, 0); } };
+  },
+
+  arb() {
+    const s = new THREE.Scene(); lights(s);
+    const cam = new THREE.PerspectiveCamera(36, 1, 0.1, 100);
+    const ids = [0x065, 0x067, 0x123]; const names = ['0x065', '0x067', '0x123', 'BUS'];
+    const bits = id => [0, ...Array.from({ length: 11 }, (_, i) => (id >> (10 - i)) & 1), 0];
+    const seq = ids.map(bits); const bus = []; const lostAt = [99, 99, 99];
+    let alive = [0, 1, 2]; for (let k = 0; k < 13; k++) { const b = Math.min(...alive.map(i => seq[i][k])); bus.push(b); alive.forEach(i => { if (seq[i][k] !== b) lostAt[i] = k; }); alive = alive.filter(i => seq[i][k] === b); }
+    const cubes = []; const S = 0.62;
+    for (let r = 0; r < 4; r++) { const row = []; for (let k = 0; k < 13; k++) { const b = r < 3 ? seq[r][k] : bus[k];
+        const c = r === 3 ? 0xeef3fb : CY; const m = new THREE.Mesh(new THREE.BoxGeometry(S * .86, 1, S * .86), new THREE.MeshPhysicalMaterial({ color: b ? 0x2a3550 : c, emissive: b ? 0x000000 : c, emissiveIntensity: b ? 0 : .45, transparent: true, opacity: 1, roughness: .3, clearcoat: 1 }));
+        m.userData = { b, r, k, h: b ? 0.18 : 0.8 }; m.position.set((k - 6) * S, 0, (r - 1.5) * 1.05 + (r === 3 ? .35 : 0)); m.scale.y = .001; s.add(m); row.push(m); }
+      cubes.push(row); const l = label(names[r], r === 3 ? '#eef3fb' : '#a9b6cf', .34); l.position.set(-6 * S - 1.3, .2, (r - 1.5) * 1.05 + (r === 3 ? .35 : 0)); s.add(l); }
+    const hdr = ['SOF', '10', '9', '8', '7', '6', '5', '4', '3', '2', '1', '0', 'RTR'];
+    hdr.forEach((h, k) => { const l = label(h, '#6f7d99', .26); l.position.set((k - 6) * S, .2, -2.35); s.add(l); });
+    const ov = document.getElementById('arbOv'); let t0 = null; const STEP = .55, CYC = 13 * STEP + 3.5;
+    return { s, cam, reset() { t0 = null; }, update(t) { if (t0 === null) t0 = t; const k = ((t - t0) % CYC) / STEP; const col = Math.floor(k);
+      cubes.forEach((row, r) => row.forEach(m => { const u = m.userData; let e = ease((k - u.k) / .6); const dead = r < 3 && u.k > lostAt[r];
+        if (dead) e = 0; m.visible = e > 0.02; m.scale.y = Math.max(.001, e * u.h); m.position.y = m.scale.y / 2;
+        const lostCube = r < 3 && u.k === lostAt[r]; if (lostCube && e > 0) { m.material.color.setHex(OR); m.material.emissive.setHex(OR); m.material.emissiveIntensity = .7; }
+        else if (!u.b) { m.material.color.setHex(r === 3 ? 0xeef3fb : CY); m.material.emissive.setHex(r === 3 ? 0xeef3fb : CY); m.material.emissiveIntensity = .45; }
+        m.material.opacity = (r < 3 && lostAt[r] < 99 && k > lostAt[r] + 1) ? 0.25 : 1; }));
+      if (ov) { if (col < 13) { const lost = [0, 1, 2].filter(i => lostAt[i] === col); ov.textContent = `bit ${hdr[col]} · bus = ${bus[col] ? 'recessive 1' : 'dominant 0'}` + (lost.length ? ` · ${names[lost[0]]} loses` : ''); } else ov.textContent = '0x065 wins arbitration: lowest ID, no bus time lost'; }
+      cam.position.set(Math.sin(t * .2) * 1.2 - 1.1, 10, 9); cam.lookAt(-.9, 0, .1); } };
+  },
+
+  faults() {
+    const s = new THREE.Scene(); lights(s);
+    const cam = new THREE.PerspectiveCamera(36, 1, 0.1, 100);
+    const st = [['ERROR-ACTIVE', GR, -3.6], ['ERROR-PASSIVE', OR, 0], ['BUS-OFF', RD, 3.6]];
+    const rings = st.map(([n, c, x]) => { const r = new THREE.Mesh(new THREE.TorusGeometry(1.05, .09, 16, 64), new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: .5 })); r.position.x = x; s.add(r);
+      const d = new THREE.Mesh(new THREE.CircleGeometry(1, 48), new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: .06 })); d.position.x = x; s.add(d);
+      const l = label(n, '#' + c.toString(16).padStart(6, '0'), .36); l.position.set(x, -1.6, 0); s.add(l); return r; });
+    [[-2.3, -1.3], [1.3, 2.3]].forEach(([a, b]) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, b - a, 8), new THREE.MeshBasicMaterial({ color: 0x6f7d99 })); m.rotation.z = Math.PI / 2; m.position.x = (a + b) / 2; s.add(m);
+      const h = new THREE.Mesh(new THREE.ConeGeometry(.1, .25, 12), new THREE.MeshBasicMaterial({ color: 0x6f7d99 })); h.rotation.z = -Math.PI / 2; h.position.x = b; s.add(h); });
+    const l1 = label('TEC ≥ 128', '#a9b6cf', .28); l1.position.set(-1.8, .35, 0); s.add(l1);
+    const l2 = label('TEC ≥ 256', '#a9b6cf', .28); l2.position.set(1.8, .35, 0); s.add(l2);
+    const node = new THREE.Mesh(new THREE.SphereGeometry(.35, 32, 32), new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: GR, emissiveIntensity: 1 })); s.add(node);
+    const ov = document.getElementById('tecOv'); let t0 = null;
+    return { s, cam, reset() { t0 = null; }, update(t) { if (t0 === null) t0 = t; const k = (t - t0) % 14;
+      let tec, x, c, txt;
+      if (k < 9.6) { const n = Math.min(32, Math.floor(k / .3)); tec = n * 8; } else tec = 256;
+      if (k > 12) tec = 0;
+      if (tec >= 256) { x = 3.6; c = RD; txt = 'bus-off'; } else if (tec >= 128) { x = 0; c = OR; txt = 'error-passive'; } else { x = -3.6; c = GR; txt = 'error-active'; }
+      if (k > 12) txt = 'recovered: 128 × 11 recessive bits';
+      node.position.x += (x - node.position.x) * .08; node.position.y = Math.sin(t * 3) * .12; node.material.emissive.setHex(c);
+      rings.forEach((r, i) => { r.rotation.y = t * .6 + i; r.scale.setScalar(Math.abs(r.position.x - x) < .1 ? 1.08 + Math.sin(t * 6) * .03 : 1); });
+      if (ov) ov.textContent = `TEC = ${tec} · ${txt}`;
+      cam.position.set(Math.sin(t * .3) * 1.5, 1.8, 13); cam.lookAt(0, -.2, 0); } };
+  },
+
+  timing() {
+    const s = new THREE.Scene(); lights(s);
+    const cam = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
+    const segs = [['SYNC', 1, 0xffc861], ['PROP_SEG', 7, CY], ['PHASE_SEG1', 6, 0x7fb2ff], ['PS2', 2, OR]]; const W = .62; let q = 0; const tqs = [];
+    segs.forEach(([n, len, c]) => { const start = q; for (let i = 0; i < len; i++) { const m = new THREE.Mesh(new THREE.BoxGeometry(W * .92, .7, 1.2), new THREE.MeshPhysicalMaterial({ color: c, emissive: c, emissiveIntensity: .2, roughness: .3, clearcoat: 1 }));
+        m.position.x = (q - 7.5) * W; s.add(m); tqs.push(m); q++; }
+      const l = label(n, '#eef3fb', .3); l.position.set(((start + q) / 2 - 8) * W, .85, 0); s.add(l); });
+    for (let i = 0; i < 16; i++) { const l = label(String(i + 1), '#6f7d99', .2); l.position.set((i - 7.5) * W, -.65, .62); s.add(l); }
+    const spX = (14 - 8) * W;
+    const sp = new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, 2.6, 8), new THREE.MeshBasicMaterial({ color: 0xffffff })); sp.position.set(spX, .2, 0); s.add(sp);
+    const spl = label('sample point 87.5 %', '#ffffff', .3); spl.position.set(spX, 1.75, 0); s.add(spl);
+    const laser = new THREE.Mesh(new THREE.PlaneGeometry(.06, 1.6), new THREE.MeshBasicMaterial({ color: CY, transparent: true, opacity: .9 })); laser.rotation.y = Math.PI / 2; s.add(laser);
+    const glow = new THREE.PointLight(0xffffff, 0, 6); glow.position.set(spX, .6, .8); s.add(glow);
+    return { s, cam, update(t) { const k = (t % 3.2) / 2.6; const xx = -8 * W + Math.min(1, k) * 16 * W; laser.position.set(xx, 0, 0); laser.visible = k <= 1;
+      tqs.forEach((m, i) => { m.material.emissiveIntensity = (xx > (i - 8) * W && xx < (i - 7) * W) ? .9 : .2; });
+      const near = Math.abs(xx - spX) < .25 && k <= 1; glow.intensity = near ? 25 : glow.intensity * .9; sp.material.color.setHex(near ? 0xffffff : 0x9aa7c7);
+      cam.position.set(Math.sin(t * .3) * 2, 3.2, 9.5); cam.lookAt(0, 0, 0); } };
+  },
+
+  gens() {
+    const s = new THREE.Scene(); lights(s);
+    const cam = new THREE.PerspectiveCamera(36, 1, 0.1, 100);
+    const D = [['Classical', 8, CY], ['CAN FD', 64, VI], ['CAN XL', 2048, OR]]; const bars = [];
+    D.forEach(([n, b, c], i) => { const h = Math.log2(b) * .45; const m = new THREE.Mesh(new THREE.BoxGeometry(1.3, h, 1.3), new THREE.MeshPhysicalMaterial({ color: c, emissive: c, emissiveIntensity: .3, roughness: .2, clearcoat: 1, transparent: true, opacity: .92 }));
+      const g = new THREE.Group(); g.position.x = (i - 1) * 2.2; m.position.y = h / 2; g.add(m); g.userData.h = h; s.add(g); bars.push(g);
+      const l = label(`${b} B`, '#eef3fb', .45); l.position.y = h + .5; g.add(l); const n2 = label(n, '#a9b6cf', .34); n2.position.set(0, -.45, .9); g.add(n2); });
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(4.2, 4.2, .08, 64), new THREE.MeshStandardMaterial({ color: 0x121b30 })); base.position.y = -.05; s.add(base);
+    let t0 = null;
+    return { s, cam, reset() { t0 = null; }, update(t) { if (t0 === null) t0 = t; const k = t - t0;
+      bars.forEach((g, i) => { const e = ease((k - .4 - i * .35) / 1); g.scale.y = Math.max(.001, e); g.children.forEach(ch => { if (ch.isSprite) ch.material.opacity = e; }); });
+      s.rotation.y = Math.sin(t * .3) * .35; cam.position.set(0, 3.8, 12.5); cam.lookAt(0, 2.0, 0); } };
+  },
+};
+
+/* ---------------- manager ---------------- */
+const built = {}; let active = null, host = null; const clock = new THREE.Clock(); let tt = 0;
+function attach(slide) {
+  const name = slide.dataset.scene; host = name ? slide.querySelector('.three') : null;
+  if (!name || !host) { active = null; renderer.domElement.remove(); return; }
+  if (!built[name]) built[name] = builders[name]();
+  active = built[name]; active.reset && active.reset();
+  host.prepend(renderer.domElement); resize();
+}
+function resize() { if (!host || !active) return; const r = host.getBoundingClientRect(); const sc = host.offsetWidth ? r.width / host.offsetWidth : 1;
+  const w = host.offsetWidth, h = host.offsetHeight; if (!w || !h) return; renderer.setPixelRatio(Math.min(2, devicePixelRatio) * Math.max(.5, sc)); renderer.setSize(w, h, false); active.cam.aspect = w / h; active.cam.updateProjectionMatrix(); }
+addEventListener('resize', resize);
+addEventListener('slidechange', e => attach(e.detail.slide));
+const cur = document.querySelector('.slide.active'); if (cur) attach(cur);
+(function loop() { const dt = Math.min(.05, clock.getDelta()); tt += dt; if (active) { active.update(tt, dt); renderer.render(active.s, active.cam); } requestAnimationFrame(loop); })();
+
+</script>
+</body>
+</html>
