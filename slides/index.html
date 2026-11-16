@@ -53,7 +53,7 @@ th{color:var(--dim);font:500 13px Inter;text-transform:uppercase;letter-spacing:
 .act::after{content:"";position:absolute;left:0;right:0;height:90px;top:0;background:#000;box-shadow:0 810px 0 #000;z-index:-1}
 .act .actno{font:400 italic 30px Fraunces,Georgia,serif;color:var(--amb)}
 .act h1{font-size:120px}
-.act .bigroman{position:absolute;right:90px;top:50%;transform:translateY(-50%);font:800 420px/1 Fraunces,Georgia,serif;color:rgba(243,235,221,.04);z-index:-1}
+.act .bigroman{position:absolute;right:90px;top:50%;transform:translateY(-50%);font:800 420px/1 Fraunces,Georgia,serif;color:rgba(243,235,221,.07);z-index:-1}
 /* cast */
 .avatar{width:84px;height:84px;border-radius:50%;display:grid;place-items:center;font:800 34px Fraunces,Georgia,serif;color:var(--ink);box-shadow:0 0 0 4px rgba(0,0,0,.4),0 0 40px currentColor}
 .slide.active .avatar{animation:bob 4s ease-in-out infinite alternate}
@@ -86,6 +86,25 @@ th{color:var(--dim);font:500 13px Inter;text-transform:uppercase;letter-spacing:
 #count{font:600 13px "JetBrains Mono";color:var(--mut);min-width:54px;text-align:center}
 #notes{position:fixed;left:16px;right:16px;bottom:56px;max-height:32vh;overflow:auto;background:rgba(13,12,18,.95);border:1px solid var(--line);border-radius:14px;padding:14px 18px;font-size:15px;line-height:1.6;color:var(--mut);display:none;z-index:26}
 #notes.on{display:block}
+
+.thead{display:flex;gap:28px;align-items:center}
+.thead .tt{display:flex;flex-direction:column;gap:12px}
+.fig{width:108px;height:108px;flex:none;border-radius:30px;display:grid;place-items:center;position:relative;
+ background:radial-gradient(70% 70% at 30% 25%,rgba(255,181,71,.16),rgba(255,181,71,.03) 70%);border:1px solid rgba(255,181,71,.28);box-shadow:0 10px 40px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06)}
+.fig::after{content:"";position:absolute;inset:-7px;border-radius:36px;border:1px dashed rgba(255,181,71,.18)}
+.fig svg{width:74px;height:74px;fill:none;stroke:var(--paper);stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round;overflow:visible}
+.fig svg .acc{stroke:var(--amb)}.fig svg .red{stroke:var(--crim)}
+.fig svg *{stroke-dasharray:1;stroke-dashoffset:1}
+.slide.active .fig svg *{animation:draw 1.5s cubic-bezier(.6,.1,.2,1) forwards;animation-delay:.45s}
+.slide.active .fig svg *:nth-child(2){animation-delay:.6s}.slide.active .fig svg *:nth-child(3){animation-delay:.75s}.slide.active .fig svg *:nth-child(n+4){animation-delay:.9s}
+@keyframes draw{to{stroke-dashoffset:0}}
+.orn{height:1px;background:linear-gradient(90deg,rgba(255,181,71,.7),rgba(255,181,71,.15) 40%,transparent 75%);position:relative;margin-top:-6px;flex:none}
+.orn::before{content:"";position:absolute;left:0;top:-4px;width:9px;height:9px;background:var(--amb);transform:rotate(45deg)}
+.paperS .fig{background:rgba(26,23,18,.05);border-color:rgba(161,83,11,.35)}.paperS .fig::after{border-color:rgba(161,83,11,.2)}
+.paperS .fig svg{stroke:#1a1712}.paperS .fig svg .acc{stroke:#a1530b}
+.bgv{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-1}
+.shade{position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(13,12,18,.88) 0%,rgba(13,12,18,.55) 45%,rgba(13,12,18,.12) 100%),linear-gradient(0deg,rgba(13,12,18,.55),transparent 35%)}
+.shade.center{background:radial-gradient(90% 80% at 50% 50%,rgba(13,12,18,.35),rgba(13,12,18,.85))}
 aside{display:none}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
@@ -96,8 +115,8 @@ aside{display:none}
 <div id="viewport"><div id="stage">
 
 <!-- 1 TITLE -->
-<section class="slide" data-mood="storm" data-cue="bigbolt" data-scene="car" data-act="">
-  <div class="three" style="position:absolute;inset:0;border:none;border-radius:0;z-index:-1;background:none"></div>
+<section class="slide" data-mood="storm" data-cue="bigbolt" data-overlay="0.35" data-act="">
+  <video class="bgv" src="media/drive.mp4" muted playsinline loop preload="auto" style="opacity:1"></video><div class="shade "></div>
   <div style="flex:1"></div>
   <p class="kicker a" style="--i:0">A story about the Controller Area Network</p>
   <h1 class="a" style="--i:1;max-width:980px">The Night the Brakes <i style="color:var(--amb)">Had to Talk</i></h1>
@@ -108,8 +127,11 @@ aside{display:none}
 
 <!-- 2 PROLOGUE -->
 <section class="slide" data-mood="calm" data-act="I">
+  <div class="thead"><div class="fig a" style="--i:0"><svg viewBox="0 0 100 100" aria-hidden="true"><path pathLength="1" d="M8 30 C30 5, 40 60, 60 30 S90 50, 92 20"/><path pathLength="1" d="M8 50 C25 80, 45 20, 62 55 S85 75, 92 45"/><path pathLength="1" d="M8 70 C35 45, 40 95, 65 72 S88 60, 92 80"/><path pathLength="1" class="acc" d="M8 90 L92 90"/></svg></div><div class="tt">
   <p class="kicker a" style="--i:0">Prologue · Stuttgart, 1983</p>
   <h2 class="a" style="--i:1;max-width:1250px">Once upon a time, every wire had one job, and cars were drowning in copper.</h2>
+  </div></div>
+  <div class="orn a" style="--i:1"></div>
   <p class="story a" style="--i:2;max-width:1200px">Each sensor needed its own wire to every computer that wanted it. Engineers at Robert Bosch dreamed of something else: <span class="amb">one shared line that everyone could talk on.</span></p>
   <div class="row" style="margin-top:auto">
     <div class="card a" style="--i:3"><p class="num">1983</p><p class="body">Bosch begins developing CAN</p></div>
@@ -123,8 +145,11 @@ aside{display:none}
 
 <!-- 3 CAST -->
 <section class="slide" data-mood="calm" data-act="I">
+  <div class="thead"><div class="fig a" style="--i:0"><svg viewBox="0 0 100 100" aria-hidden="true"><circle pathLength="1" cx="18" cy="42" r="10"/><path pathLength="1" d="M6 72 Q18 56 30 72"/><circle pathLength="1" cx="41" cy="38" r="10"/><path pathLength="1" d="M29 68 Q41 52 53 68"/><circle pathLength="1" cx="64" cy="42" r="10"/><path pathLength="1" d="M52 72 Q64 56 76 72"/><circle pathLength="1" class="acc" cx="85" cy="38" r="9"/><path pathLength="1" class="acc" d="M74 66 Q85 52 96 66"/><path pathLength="1" class="acc" d="M6 86 L94 86"/></svg></div><div class="tt">
   <p class="kicker a" style="--i:0">Act I · Meet the cast</p>
   <h2 class="a" style="--i:1">Four computers, one street</h2>
+  </div></div>
+  <div class="orn a" style="--i:1"></div>
   <div class="row" style="flex:1;align-items:stretch">
     <div class="card a" style="--i:2"><div class="avatar" style="background:var(--crim);color:var(--crim)"><span style="color:#1a1712">B</span></div><h3>Bria</h3><span class="idtag crim">Brakes · ID 0x065</span><p class="body">Serious, fast, always first in line. When Bria speaks, lives can depend on it.</p><p class="story" style="font-size:21px;margin-top:auto;color:var(--crim)">“BRAKE PRESSURE. Now.”</p></div>
     <div class="card a" style="--i:3"><div class="avatar" style="background:var(--amb);color:var(--amb)"><span style="color:#1a1712">E</span></div><h3>Engie</h3><span class="idtag amb">Engine · ID 0x067</span><p class="body">Talks constantly about RPM and torque. Important, but can wait a few microseconds.</p><p class="story" style="font-size:21px;margin-top:auto;color:var(--amb)">“RPM 2140… 2150… 2160…”</p></div>
@@ -137,6 +162,7 @@ aside{display:none}
 
 <!-- 4 RULE 1 -->
 <section class="slide paperS" data-mood="calm" data-act="I" style="justify-content:center">
+  <div class="fig a" style="--i:0"><svg viewBox="0 0 100 100" aria-hidden="true"><rect pathLength="1" x="12" y="28" width="76" height="50" rx="4"/><path pathLength="1" d="M12 30 L50 58 L88 30"/><rect pathLength="1" class="acc" x="56" y="62" width="30" height="12" rx="2"/><path pathLength="1" class="acc" d="M60 68 L82 68"/></svg></div>
   <p class="kicker a" style="--i:0">Rule №1 of the street</p>
   <p class="quote a" style="--i:1;max-width:1300px">Nobody says <i>who</i> a message is for. They only say <i>what</i> it is, and the label is also its rank.</p>
   <p class="lead a" style="--i:2;max-width:1150px">Bria never says “Engie, listen.” She says “BRAKE PRESSURE.” Everyone hears it, and each computer’s acceptance filter decides whether to keep it. A lower ID number means a higher priority.</p>
@@ -146,8 +172,11 @@ aside{display:none}
 
 <!-- 5 RULE 2 VOLT -->
 <section class="slide" data-mood="night" data-scene="volt" data-act="I">
+  <div class="thead"><div class="fig a" style="--i:0"><svg viewBox="0 0 100 100" aria-hidden="true"><path pathLength="1" d="M18 42 L42 42 L70 22 L70 78 L42 58 L18 58 Z"/><path pathLength="1" d="M28 58 L32 80 L42 80 L40 58"/><path pathLength="1" class="acc" d="M78 36 Q86 50 78 64"/><path pathLength="1" class="acc" d="M85 28 Q97 50 85 72"/></svg></div><div class="tt">
   <p class="kicker a" style="--i:0">Rule №2 · Shouting beats whispering</p>
   <h2 class="a" style="--i:1">On this street, “0” is a shout and “1” is silence</h2>
+  </div></div>
+  <div class="orn a" style="--i:1"></div>
   <div class="split">
     <div class="col">
       <table class="a" style="--i:2"><tr><th>Bit</th><th>CAN_H</th><th>CAN_L</th><th>Difference</th></tr>
@@ -164,8 +193,11 @@ aside{display:none}
 
 <!-- 6 RULE 3 BUS -->
 <section class="slide" data-mood="night" data-scene="bus" data-act="I">
+  <div class="thead"><div class="fig a" style="--i:0"><svg viewBox="0 0 100 100" aria-hidden="true"><path pathLength="1" d="M6 40 L94 40"/><path pathLength="1" d="M6 60 L94 60"/><path pathLength="1" class="acc" d="M14 40 L14 46 L8 49 L20 53 L8 57 L14 60"/><path pathLength="1" class="acc" d="M86 40 L86 46 L80 49 L92 53 L80 57 L86 60"/><path pathLength="1" d="M38 40 L38 22 M62 40 L62 22 M50 60 L50 78"/></svg></div><div class="tt">
   <p class="kicker a" style="--i:0">Rule №3 · Sponges at both ends</p>
   <h2 class="a" style="--i:1">One street, a 120 Ω resistor at each end</h2>
+  </div></div>
+  <div class="orn a" style="--i:1"></div>
   <div class="three a" style="--i:2"><div class="ov">every computer hangs off the same line · signals travel both ways</div></div>
   <p class="body a" style="--i:3;max-width:1300px">Without the end resistors, signals would bounce back like waves hitting a wall. The resistors soak them up, matching the cable’s 120 Ω impedance, and pull the street back to silence (recessive) when nobody talks.</p>
   <p class="src">ISO 11898-2 · CiA, “CAN HS transmission” · TI SLOA101B</p>
@@ -173,8 +205,8 @@ aside{display:none}
 </section>
 
 <!-- 7 ACT III CARD -->
-<section class="slide act" data-mood="tense" data-cue="bigbolt" data-scene="car2" data-act="II">
-  <div class="three" style="position:absolute;inset:0;border:none;border-radius:0;z-index:-1;background:none;opacity:.55"></div>
+<section class="slide act" data-mood="tense" data-cue="bigbolt" data-overlay="0.3" data-act="II">
+  <video class="bgv" src="media/brake.mp4" muted playsinline loop preload="auto" style="opacity:1"></video><div class="shade "></div>
   <span class="bigroman">II</span>
   <p class="actno a" style="--i:0">Act II</p>
   <h1 class="a" style="--i:1">The rainy night</h1>
@@ -185,8 +217,11 @@ aside{display:none}
 
 <!-- 8 RACE -->
 <section class="slide" data-mood="night" data-scene="arb" data-act="II">
+  <div class="thead"><div class="fig a" style="--i:0"><svg viewBox="0 0 100 100" aria-hidden="true"><path pathLength="1" d="M22 92 L22 10"/><path pathLength="1" class="acc" d="M22 12 L78 12 L78 48 L22 48"/><path pathLength="1" class="acc" d="M36 12 L36 48 M50 12 L50 48 M64 12 L64 48 M22 24 L78 24 M22 36 L78 36"/><path pathLength="1" d="M8 92 L92 92"/></svg></div><div class="tt">
   <p class="kicker a" style="--i:0">Act II · The race</p>
   <h2 class="a" style="--i:1">They all speak, but only the most urgent finishes</h2>
+  </div></div>
+  <div class="orn a" style="--i:1"></div>
   <div class="split" style="grid-template-columns:1.4fr 1fr">
     <div class="three a" style="--i:2"><div class="ov" id="arbOv">SOF · ID10 → ID0 · RTR</div></div>
     <div class="col">
@@ -201,8 +236,11 @@ aside{display:none}
 
 <!-- 9 FRAME -->
 <section class="slide" data-mood="night" data-scene="frame" data-act="II">
+  <div class="thead"><div class="fig a" style="--i:0"><svg viewBox="0 0 100 100" aria-hidden="true"><rect pathLength="1" x="10" y="24" width="80" height="54" rx="4"/><path pathLength="1" d="M10 26 L50 54 L90 26"/><circle pathLength="1" class="acc" cx="50" cy="62" r="11"/><path pathLength="1" class="acc" d="M45 62 L49 66 L56 57"/></svg></div><div class="tt">
   <p class="kicker a" style="--i:0">Act II · What Bria actually said</p>
   <h2 class="a" style="--i:1">Every message is a tiny, perfectly formatted letter</h2>
+  </div></div>
+  <div class="orn a" style="--i:1"></div>
   <div class="three a" style="--i:2;flex:1.2"></div>
   <div class="row">
     <div class="card a" style="--i:3"><h3>Envelope</h3><p class="body">Start of Frame wakes everyone. The 11-bit ID names the content. RTR marks data or a request.</p></div>
@@ -215,7 +253,7 @@ aside{display:none}
 
 <!-- 10 ACT III CARD -->
 <section class="slide act" data-mood="villain" data-cue="bigbolt" data-act="III">
-  <span class="bigroman">III</span>
+  <video class="bgv" src="media/corrosion.mp4" muted playsinline loop preload="auto" style="opacity:1"></video><div class="shade "></div><span class="bigroman">III</span>
   <p class="actno a" style="--i:0">Act III</p>
   <h1 class="a" style="--i:1">The villain</h1>
   <span class="chip a" style="--i:2"><b style="background:var(--lav);box-shadow:0 0 10px var(--lav)"></b>23:47:13 · Rusty starts transmitting</span>
@@ -225,8 +263,11 @@ aside{display:none}
 
 <!-- 11 DETECTIVES -->
 <section class="slide" data-mood="villain2" data-act="III">
+  <div class="thead"><div class="fig a" style="--i:0"><svg viewBox="0 0 100 100" aria-hidden="true"><circle pathLength="1" cx="42" cy="42" r="24"/><path pathLength="1" class="acc" d="M60 60 L88 88"/><path pathLength="1" d="M30 34 L30 50 M38 34 L38 50"/><circle pathLength="1" cx="50" cy="42" r="7"/></svg></div><div class="tt">
   <p class="kicker a" style="--i:0">Act III · Five detectives on every wire</p>
   <h2 class="a" style="--i:1">Garbage never gets past the guards</h2>
+  </div></div>
+  <div class="orn a" style="--i:1"></div>
   <div class="split">
     <div class="col">
       <div class="code a" style="--i:2">Frame bits:  0 0 0 0 0 0 0 1
@@ -249,8 +290,11 @@ On the bus:  0 0 0 0 0 <span class="amb">1</span> 0 0 1   ← stuff bit</div>
 
 <!-- 12 CARDS -->
 <section class="slide" data-mood="villain2" data-scene="faults" data-act="III">
+  <div class="thead"><div class="fig a" style="--i:0"><svg viewBox="0 0 100 100" aria-hidden="true"><rect pathLength="1" class="acc" x="16" y="22" width="34" height="50" rx="4" transform="rotate(-10 33 47)"/><rect pathLength="1" x="50" y="26" width="34" height="50" rx="4" transform="rotate(8 67 51)" class="red"/><path pathLength="1" d="M10 90 L90 90"/></svg></div><div class="tt">
   <p class="kicker a" style="--i:0">Act III · Yellow card, red card</p>
   <h2 class="a" style="--i:1">Rusty sends itself off the pitch</h2>
+  </div></div>
+  <div class="orn a" style="--i:1"></div>
   <div class="split" style="grid-template-columns:1.3fr 1fr">
     <div class="three a" style="--i:2"><div class="ov" id="tecOv">Rusty’s TEC = 0</div></div>
     <div class="col">
@@ -269,7 +313,7 @@ On the bus:  0 0 0 0 0 <span class="amb">1</span> 0 0 1   ← stuff bit</div>
 
 <!-- 13 ACT IV CARD -->
 <section class="slide act" data-mood="morning" data-act="IV">
-  <span class="bigroman">IV</span>
+  <video class="bgv" src="media/morning.mp4" muted playsinline loop preload="auto" style="opacity:1"></video><div class="shade "></div><span class="bigroman">IV</span>
   <p class="actno a" style="--i:0">Act IV</p>
   <h1 class="a" style="--i:1">The promise</h1>
   <span class="chip a" style="--i:2"><b style="background:var(--amb);box-shadow:0 0 10px var(--amb)"></b>the next morning · an engineer’s desk</span>
@@ -279,8 +323,11 @@ On the bus:  0 0 0 0 0 <span class="amb">1</span> 0 0 1   ← stuff bit</div>
 
 <!-- 14 TIMING -->
 <section class="slide" data-mood="morning" data-scene="timing" data-act="IV">
+  <div class="thead"><div class="fig a" style="--i:0"><svg viewBox="0 0 100 100" aria-hidden="true"><path pathLength="1" d="M30 90 L42 14 L58 14 L70 90 Z"/><path pathLength="1" class="acc" d="M50 78 L68 26"/><circle pathLength="1" class="acc" cx="64" cy="38" r="5"/><path pathLength="1" d="M24 90 L76 90"/></svg></div><div class="tt">
   <p class="kicker a" style="--i:0">Act IV · Everyone dances to one beat</p>
   <h2 class="a" style="--i:1">Inside a single bit: 16 time quanta</h2>
+  </div></div>
+  <div class="orn a" style="--i:1"></div>
   <div class="three a" style="--i:2"><div class="ov">SYNC 1 · PROP 7 · PHASE_SEG1 6 · PHASE_SEG2 2 → sample point 87.5 %</div></div>
   <div class="row">
     <div class="card a" style="--i:3"><h3>Hard sync</h3><p class="body">The first edge (SOF) restarts everyone’s bit clock.</p></div>
@@ -293,8 +340,11 @@ On the bus:  0 0 0 0 0 <span class="amb">1</span> 0 0 1   ← stuff bit</div>
 
 <!-- 15 NUMBERS -->
 <section class="slide" data-mood="morning" data-act="IV">
+  <div class="thead"><div class="fig a" style="--i:0"><svg viewBox="0 0 100 100" aria-hidden="true"><circle pathLength="1" cx="50" cy="56" r="32"/><path pathLength="1" d="M44 16 L56 16 M50 16 L50 24"/><path pathLength="1" class="acc" d="M50 56 L50 34 M50 56 L66 64"/><path pathLength="1" d="M78 26 L84 20"/></svg></div><div class="tt">
   <p class="kicker a" style="--i:0">Act IV · Measuring the longest letter</p>
   <h2 class="a" style="--i:1">How long can one message possibly take?</h2>
+  </div></div>
+  <div class="orn a" style="--i:1"></div>
   <div class="code a" style="--i:2">C<sub>m</sub> = ( g + 8·s<sub>m</sub> + 13 + ⌊(g + 8·s<sub>m</sub> − 1) / 4⌋ ) · τ<sub>bit</sub>      <span style="color:var(--dim)">g = 34 (11-bit ID) · 54 (29-bit ID)</span></div>
   <div class="row">
     <div class="card a" style="--i:3"><p class="num" data-count="135">135</p><p class="body">bits: worst-case 8-byte frame with an 11-bit ID, counting stuff bits and the 3-bit intermission</p></div>
@@ -308,8 +358,11 @@ On the bus:  0 0 0 0 0 <span class="amb">1</span> 0 0 1   ← stuff bit</div>
 
 <!-- 16 RTA -->
 <section class="slide" data-mood="morning" data-act="IV">
+  <div class="thead"><div class="fig a" style="--i:0"><svg viewBox="0 0 100 100" aria-hidden="true"><rect pathLength="1" x="16" y="10" width="68" height="80" rx="6"/><path pathLength="1" class="acc" d="M62 30 L36 30 L52 50 L36 70 L62 70"/><path pathLength="1" d="M28 84 L72 84"/></svg></div><div class="tt">
   <p class="kicker a" style="--i:0">Act IV · The engineer’s recipe</p>
   <h2 class="a" style="--i:1">Three kinds of waiting add up to the worst case</h2>
+  </div></div>
+  <div class="orn a" style="--i:1"></div>
   <div class="code a" style="--i:2"><span class="amb">B_m</span>    = max over lower-priority k of C_k
 <span class="amb">t_m</span>    = B_m + Σ<sub>k∈hep(m)</sub> ⌈(t_m + J_k) / T_k⌉ · C_k
 <span class="amb">Q_m</span>    = ⌈(t_m + J_m) / T_m⌉
@@ -326,7 +379,7 @@ On the bus:  0 0 0 0 0 <span class="amb">1</span> 0 0 1   ← stuff bit</div>
 
 <!-- 17 ACT V CARD -->
 <section class="slide act" data-mood="twist" data-act="V">
-  <span class="bigroman">V</span>
+  <video class="bgv" src="media/twist.mp4" muted playsinline loop preload="auto" style="opacity:1"></video><div class="shade "></div><span class="bigroman">V</span>
   <p class="actno a" style="--i:0">Act V</p>
   <h1 class="a" style="--i:1">The twist</h1>
   <span class="chip a" style="--i:2"><b style="background:var(--crim);box-shadow:0 0 10px var(--crim)"></b>1994 → 2007 · University of York &amp; TU Eindhoven</span>
@@ -336,8 +389,11 @@ On the bus:  0 0 0 0 0 <span class="amb">1</span> 0 0 1   ← stuff bit</div>
 
 <!-- 18 GANTT -->
 <section class="slide" data-mood="twist" data-cue="deadline" data-act="V">
+  <div class="thead"><div class="fig a" style="--i:0"><svg viewBox="0 0 100 100" aria-hidden="true"><path pathLength="1" d="M10 88 L90 88 M10 88 L10 12"/><path pathLength="1" d="M18 26 L40 26 M46 46 L66 46 M24 66 L44 66"/><path pathLength="1" class="acc" d="M66 58 L86 78 M86 58 L66 78" class="red"/><path pathLength="1" class="acc" d="M76 14 L76 90" stroke-dasharray="4 4" class="red"/></svg></div><div class="tt">
   <p class="kicker a" style="--i:0">Act V · The case that broke the proof</p>
   <h2 class="a" style="--i:1">The first copy was fine. The second one wasn’t.</h2>
+  </div></div>
+  <div class="orn a" style="--i:1"></div>
   <p class="lead a" style="--i:2;max-width:1350px">A, B and C each take 1 ms. A repeats every 2.5 ms. B and C repeat every 3.5 ms, with a 3.25 ms deadline. All three start together at t = 0.</p>
   <div class="card a" style="--i:3;padding:38px 30px 36px;flex:none"><div class="gantt" id="gantt"></div></div>
   <div class="row">
@@ -351,6 +407,7 @@ On the bus:  0 0 0 0 0 <span class="amb">1</span> 0 0 1   ← stuff bit</div>
 
 <!-- 19 RESOLUTION -->
 <section class="slide paperS" data-mood="resolve" data-cue="resolve" data-act="V" style="justify-content:center">
+  <div class="fig a" style="--i:0"><svg viewBox="0 0 100 100" aria-hidden="true"><path pathLength="1" d="M50 10 C28 10 20 30 26 46 C30 56 38 60 38 72 L62 72 C62 60 70 56 74 46 C80 30 72 10 50 10 Z"/><path pathLength="1" d="M40 80 L60 80 M43 88 L57 88"/><path pathLength="1" class="acc" d="M40 40 L48 48 L62 32"/></svg></div>
   <p class="kicker a" style="--i:0">Resolution</p>
   <p class="quote a" style="--i:1;max-width:1350px">Science didn’t break. It <i>corrected itself.</i></p>
   <div class="row a" style="--i:2;max-width:1350px">
@@ -364,8 +421,11 @@ On the bus:  0 0 0 0 0 <span class="amb">1</span> 0 0 1   ← stuff bit</div>
 
 <!-- 20 EPILOGUE GENS -->
 <section class="slide" data-mood="calm" data-scene="gens" data-act="VI">
+  <div class="thead"><div class="fig a" style="--i:0"><svg viewBox="0 0 100 100" aria-hidden="true"><rect pathLength="1" x="8" y="62" width="18" height="18" rx="2"/><rect pathLength="1" x="34" y="46" width="26" height="34" rx="2"/><rect pathLength="1" class="acc" x="66" y="18" width="28" height="62" rx="2"/><path pathLength="1" d="M4 86 L96 86"/></svg></div><div class="tt">
   <p class="kicker a" style="--i:0">Act VI · Epilogue: the next generations</p>
   <h2 class="a" style="--i:1">Bria’s grandchildren carry far bigger letters</h2>
+  </div></div>
+  <div class="orn a" style="--i:1"></div>
   <div class="split" style="grid-template-columns:1fr 1.25fr">
     <div class="three a" style="--i:2"><div class="ov">max data field per frame · height on a log₂ scale</div></div>
     <table class="a" style="--i:3;font-size:17px">
@@ -382,10 +442,13 @@ On the bus:  0 0 0 0 0 <span class="amb">1</span> 0 0 1   ← stuff bit</div>
 </section>
 
 <!-- 21 YOUR TURN -->
-<section class="slide" data-mood="calm" data-scene="car2" data-act="VI">
-  <div class="three" style="position:absolute;inset:0;border:none;border-radius:0;z-index:-1;background:none;opacity:.14"></div>
+<section class="slide" data-mood="calm" data-act="VI">
+  <video class="bgv" src="media/drive.mp4" muted playsinline loop preload="auto" style="opacity:0.35"></video><div class="shade center"></div>
+  <div class="thead"><div class="fig a" style="--i:0"><svg viewBox="0 0 100 100" aria-hidden="true"><path pathLength="1" d="M16 84 L22 62 L70 14 L86 30 L38 78 Z"/><path pathLength="1" d="M62 22 L78 38"/><path pathLength="1" class="acc" d="M10 92 Q30 84 50 92 T90 92"/></svg></div><div class="tt">
   <p class="kicker a" style="--i:0">Your turn</p>
   <h2 class="a" style="--i:1">Now you write the next chapter</h2>
+  </div></div>
+  <div class="orn a" style="--i:1"></div>
   <div class="row" style="align-items:center;gap:60px;flex:1">
     <div class="a" style="--i:2;background:#f3ebdd;padding:22px;border-radius:24px;box-shadow:0 20px 80px rgba(255,181,71,.3)">
       <img src="data:image/png;base64,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" alt="QR code linking to flutteringgamer.github.io/can-lab" style="width:320px;height:320px;display:block;image-rendering:pixelated;mix-blend-mode:multiply">
@@ -402,6 +465,7 @@ On the bus:  0 0 0 0 0 <span class="amb">1</span> 0 0 1   ← stuff bit</div>
 
 <!-- 22 MORAL -->
 <section class="slide paperS" data-mood="resolve" data-act="VI" style="justify-content:center;gap:30px">
+  <div class="fig a" style="--i:0"><svg viewBox="0 0 100 100" aria-hidden="true"><path pathLength="1" d="M50 26 C40 18 22 18 10 22 L10 82 C22 78 40 78 50 86 C60 78 78 78 90 82 L90 22 C78 18 60 18 50 26 Z"/><path pathLength="1" d="M50 26 L50 86"/><path pathLength="1" class="acc" d="M20 36 L40 36 M20 48 L40 48 M60 36 L80 36 M60 48 L80 48"/></svg></div>
   <p class="kicker a" style="--i:0">The moral of the story</p>
   <p class="quote a" style="--i:1;font-size:52px">1 · The most urgent voice always finishes. Nobody’s words are ever wasted.</p>
   <p class="quote a" style="--i:2;font-size:52px">2 · A broken node benches itself, so the team plays on.</p>
@@ -412,8 +476,11 @@ On the bus:  0 0 0 0 0 <span class="amb">1</span> 0 0 1   ← stuff bit</div>
 
 <!-- 23 REFS -->
 <section class="slide" data-mood="quiet" data-act="VI">
+  <div class="thead"><div class="fig a" style="--i:0"><svg viewBox="0 0 100 100" aria-hidden="true"><rect pathLength="1" x="14" y="66" width="72" height="14" rx="2"/><rect pathLength="1" x="20" y="50" width="62" height="14" rx="2"/><rect pathLength="1" class="acc" x="12" y="34" width="70" height="14" rx="2"/><path pathLength="1" d="M30 34 L30 18 L40 24 L50 18 L50 34"/><path pathLength="1" d="M8 86 L92 86"/></svg></div><div class="tt">
   <p class="kicker a" style="--i:0">Sources · the story is fiction, the protocol is not</p>
   <h2 class="a" style="--i:1">References</h2>
+  </div></div>
+  <div class="orn a" style="--i:1"></div>
   <ol class="body a" style="--i:2;font-size:18px;line-height:1.6;padding-left:26px;margin:0;display:flex;flex-direction:column;gap:5px">
     <li>Robert Bosch GmbH (1991). CAN Specification Version 2.0, Parts A and B. Stuttgart.</li>
     <li>ISO 11898-1:2015 and ISO 11898-1:2024, Road vehicles: Controller area network, Part 1. ISO 11898-2: High-speed physical medium attachment.</li>
@@ -457,6 +524,7 @@ function go(n,fromHash){
   if(!fromHash){try{history.replaceState(null,'','#'+(n+1))}catch(e){}}
   slides[n].querySelectorAll('[data-count]').forEach(countUp);
   if(slides[n].querySelector('#gantt'))buildGantt();
+  document.querySelectorAll('video.bgv').forEach(v=>{if(slides[n].contains(v)){try{v.currentTime=0;const p=v.play();if(p)p.catch(()=>{})}catch(e){}}else v.pause()});
   window.dispatchEvent(new CustomEvent('slidechange',{detail:{slide:slides[n]}}));
 }
 function countUp(el){const t=+el.dataset.count,t0=performance.now();const f=now=>{const k=Math.min(1,(now-t0-500)/900);el.textContent=Math.round(t*(k<0?0:1-Math.pow(1-k,3)));if(k<1)requestAnimationFrame(f)};requestAnimationFrame(f)}
@@ -776,36 +844,50 @@ addEventListener('lightning', e => { if (active && active.flash) active.flash.in
   #sndhint{position:fixed;left:50%;bottom:64px;transform:translateX(-50%);z-index:31;font:500 15px Inter,sans-serif;color:#f3ebdd;background:rgba(13,12,18,.75);border:1px solid rgba(243,235,221,.18);padding:10px 18px;border-radius:99px;transition:opacity .8s;pointer-events:none}`;
   document.head.append(st);
 
-  // rain + lens drops
+  // ---- realistic rain: 3 depth layers, wind gusts, ground splashes, mist, lens drops, visible bolts
   const ctx2 = fx.getContext('2d'); let W = 0, H = 0, DPR = Math.min(2, devicePixelRatio || 1);
   function rs() { W = fx.width = innerWidth * DPR; H = fx.height = innerHeight * DPR; } addEventListener('resize', rs); rs();
-  const drops = Array.from({ length: 700 }, () => ({ x: Math.random(), y: Math.random(), l: .5 + Math.random(), v: .7 + Math.random() * .6 }));
-  const lens = Array.from({ length: 26 }, () => ({ x: Math.random(), y: Math.random() * -1, r: 2 + Math.random() * 7, v: 0, stick: Math.random() * 4 }));
-  let rainLevel = 0, flashLevel = 0, last = performance.now(), nextBolt = performance.now() + 3000;
+  const LAYERS = [{ n: 420, len: 9, w: .7, a: .09, v: 2.3 }, { n: 260, len: 20, w: 1.1, a: .15, v: 1.75 }, { n: 70, len: 44, w: 2.0, a: .11, v: 1.25 }];
+  LAYERS.forEach(L => L.d = Array.from({ length: L.n }, () => ({ x: Math.random() * 1.2 - .1, y: Math.random(), s: .8 + Math.random() * .4 })));
+  const sps = Array.from({ length: 70 }, () => ({ x: Math.random(), y: .86 + Math.random() * .13, t: Math.random(), s: .6 + Math.random() * .8 }));
+  const lens = Array.from({ length: 22 }, () => ({ x: Math.random(), y: Math.random() * -1, r: 2 + Math.random() * 7, v: 0, stick: Math.random() * 4 }));
+  let rainLevel = 0, flashLevel = 0, last = performance.now(), nextBolt = performance.now() + 3000, overlay = 1, boltPath = null, boltT = 0;
   function frame(now) {
-    const dt = Math.min(.05, (now - last) / 1000); last = now;
-    rainLevel += (mood.rain - rainLevel) * Math.min(1, dt * 1.2);
+    const dt = Math.min(.05, (now - last) / 1000); last = now; const T = now / 1000;
+    rainLevel += (mood.rain * overlay - rainLevel) * Math.min(1, dt * 1.2);
     ctx2.clearRect(0, 0, W, H);
+    const wind = .16 + Math.sin(T * .37) * .06 + Math.sin(T * 1.3) * .03;
     if (rainLevel > .01) {
-      const n = Math.floor(drops.length * rainLevel);
-      ctx2.strokeStyle = `rgba(200,215,255,${.10 + .18 * rainLevel})`; ctx2.lineWidth = 1.1 * DPR; ctx2.beginPath();
-      for (let i = 0; i < n; i++) { const d = drops[i]; d.y += d.v * dt * 1.6; d.x -= dt * .05; if (d.y > 1.05) { d.y = -.05; d.x = Math.random() * 1.1; } if (d.x < -.05) d.x += 1.1;
-        const x = d.x * W, y = d.y * H, len = 18 * d.l * DPR; ctx2.moveTo(x, y); ctx2.lineTo(x - len * .12, y + len); }
+      // mist band near the ground
+      const mg = ctx2.createLinearGradient(0, H * .62, 0, H); mg.addColorStop(0, 'rgba(150,165,195,0)'); mg.addColorStop(1, `rgba(150,165,195,${.10 * rainLevel})`); ctx2.fillStyle = mg; ctx2.fillRect(0, H * .62, W, H * .38);
+      for (let k = 0; k < 3; k++) { const cx = ((T * (.012 + k * .006) + k * .37) % 1.4 - .2) * W, cy = H * (.82 + k * .05); const rg = ctx2.createRadialGradient(cx, cy, 0, cx, cy, W * .35); rg.addColorStop(0, `rgba(170,180,205,${.05 * rainLevel})`); rg.addColorStop(1, 'rgba(170,180,205,0)'); ctx2.fillStyle = rg; ctx2.fillRect(0, 0, W, H); }
+      LAYERS.forEach(L => { const n = Math.floor(L.n * Math.min(1, rainLevel * 1.15)); ctx2.strokeStyle = `rgba(205,218,245,${L.a * (.5 + rainLevel * .7)})`; ctx2.lineWidth = L.w * DPR; ctx2.lineCap = 'round'; ctx2.beginPath();
+        for (let i = 0; i < n; i++) { const d = L.d[i]; d.y += L.v * d.s * dt; d.x -= wind * L.v * d.s * dt * .55; if (d.y > 1.04) { d.y = -.06; d.x = Math.random() * 1.25; } if (d.x < -.1) d.x += 1.25;
+          const x = d.x * W, y = d.y * H, len = L.len * d.s * DPR; ctx2.moveTo(x, y); ctx2.lineTo(x + wind * len, y - len); } ctx2.stroke(); });
+      // splashes (little crowns on the ground)
+      ctx2.strokeStyle = `rgba(215,225,250,${.35 * rainLevel})`; ctx2.lineWidth = 1 * DPR; ctx2.beginPath();
+      for (const s of sps) { s.t += dt * 3.2; if (s.t > 1) { s.t = 0; s.x = Math.random(); s.y = .86 + Math.random() * .13; s.s = .6 + Math.random() * .8; } if (Math.random() > rainLevel + .1) continue;
+        const x = s.x * W, y = s.y * H, r = (2 + s.t * 7) * s.s * DPR * (.5 + s.y);
+        ctx2.moveTo(x - r, y); ctx2.quadraticCurveTo(x - r * .8, y - r * .9, x - r * .4, y - r * 1.3 * (1 - s.t)); ctx2.moveTo(x + r, y); ctx2.quadraticCurveTo(x + r * .8, y - r * .9, x + r * .4, y - r * 1.3 * (1 - s.t)); ctx2.moveTo(x - r * 1.3, y + 1); ctx2.lineTo(x + r * 1.3, y + 1); }
       ctx2.stroke();
+      // drops on the lens
       for (const L of lens) { if (L.stick > 0) L.stick -= dt; else { L.v += dt * .25; L.y += L.v * dt * rainLevel; }
         if (L.y > 1.1) { L.y = Math.random() * .6 - .1; L.x = Math.random(); L.v = 0; L.stick = Math.random() * 5; L.r = 2 + Math.random() * 7; }
         const x = L.x * W, y = L.y * H, r = L.r * DPR * (0.6 + rainLevel * .6);
-        const g = ctx2.createRadialGradient(x - r * .3, y - r * .4, r * .1, x, y, r);
-        g.addColorStop(0, `rgba(255,255,255,${.35 * rainLevel})`); g.addColorStop(.6, `rgba(180,200,255,${.08 * rainLevel})`); g.addColorStop(1, 'rgba(0,0,0,0)');
+        const g = ctx2.createRadialGradient(x - r * .3, y - r * .4, r * .1, x, y, r); g.addColorStop(0, `rgba(255,255,255,${.3 * rainLevel})`); g.addColorStop(.6, `rgba(180,200,255,${.07 * rainLevel})`); g.addColorStop(1, 'rgba(0,0,0,0)');
         ctx2.fillStyle = g; ctx2.beginPath(); ctx2.arc(x, y, r, 0, 7); ctx2.fill();
-        if (L.v > 0) { ctx2.strokeStyle = `rgba(200,215,255,${.08 * rainLevel})`; ctx2.lineWidth = r * .5; ctx2.beginPath(); ctx2.moveTo(x, y - r); ctx2.lineTo(x, y - r - L.v * 60 * DPR); ctx2.stroke(); } }
+        if (L.v > 0) { ctx2.strokeStyle = `rgba(200,215,255,${.07 * rainLevel})`; ctx2.lineWidth = r * .5; ctx2.beginPath(); ctx2.moveTo(x, y - r); ctx2.lineTo(x, y - r - L.v * 60 * DPR); ctx2.stroke(); } }
     }
+    // visible lightning bolt
+    if (boltPath && now - boltT < 220) { const k = 1 - (now - boltT) / 220; ctx2.save(); ctx2.shadowColor = 'rgba(200,215,255,1)'; ctx2.shadowBlur = 30 * DPR; ctx2.strokeStyle = `rgba(240,245,255,${k})`; ctx2.lineWidth = 2.4 * DPR; ctx2.beginPath(); boltPath.forEach((p, i) => i ? ctx2.lineTo(p[0], p[1]) : ctx2.moveTo(p[0], p[1])); ctx2.stroke(); ctx2.restore(); }
     if (mood.lightning > 0 && now > nextBolt) { bolt(); nextBolt = now + (5000 + Math.random() * 9000) / mood.lightning; }
     flashLevel *= Math.pow(.02, dt); flash.style.opacity = flashLevel.toFixed(3);
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
+  function makeBolt() { let x = (.25 + Math.random() * .6) * W, y = 0; const pts = [[x, y]]; while (y < H * (.45 + Math.random() * .25)) { x += (Math.random() - .5) * 60 * DPR; y += (12 + Math.random() * 28) * DPR; pts.push([x, y]); } boltPath = pts; boltT = performance.now(); }
   function bolt(big) {
+    if (big || Math.random() < .5) makeBolt();
     const seq = big ? [1, .2, .9, 0, .6] : [.55, .1, .4];
     seq.forEach((v, i) => setTimeout(() => { flashLevel = Math.max(flashLevel, v); }, i * 70));
     window.dispatchEvent(new CustomEvent('lightning', { detail: { big: !!big } }));
@@ -877,6 +959,7 @@ addEventListener('lightning', e => { if (active && active.flash) active.flash.in
   let cueTimers = [];
   function onSlide(slide) {
     cueTimers.forEach(clearTimeout); cueTimers = [];
+    overlay = slide.dataset.overlay ? +slide.dataset.overlay : 1;
     const name = slide.dataset.mood || 'quiet'; const prev = moodName; mood = MOODS[name]; moodName = name;
     sun.style.opacity = mood.sun; red.style.transition = 'opacity 1.5s'; red.style.opacity = mood.red * .35;
     document.querySelectorAll('.glitch').forEach(el => el.classList.remove('glitch'));

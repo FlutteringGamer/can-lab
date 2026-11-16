@@ -7,6 +7,8 @@ An interactive learning site for the CAN protocol (real-time embedded systems co
 ## Slides
 The lecture deck is at `/slides/`: a six-act story (“The Night the Brakes Had to Talk”) with live 3D models. The earlier design is at `/slides/classic/`. Use ← → to move, N for speaker notes, F for fullscreen and S to toggle the synthesized rain, thunder and atmosphere.
 
+The five story clips in `slides/media/` are 3D renders (three.js, rendered frame by frame and encoded with ffmpeg); the characters and scenario are fictional.
+
 ## What's inside
 - 3D CAN bus (three.js): click an ECU to transmit, or start all of them at once to watch arbitration
 - Physical layer scope: CAN_H / CAN_L, differential voltage, common-mode noise
